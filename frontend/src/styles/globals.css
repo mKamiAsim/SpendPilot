@@ -1,0 +1,113 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --canvas: #f6f7f9;
+  --surface: #ffffff;
+  --surface-secondary: #eef2f6;
+  --ink: #17212f;
+  --ink-secondary: #526174;
+  --line: #dce3eb;
+  --action: #0f766e;
+  --action-ink: #ffffff;
+  --focus: #0f766e;
+  --good: #0f766e;
+  --good-bg: #e7f5f3;
+  --warn: #92400e;
+  --warn-bg: #fef3c7;
+  --bad: #9f1239;
+  --bad-bg: #ffe4e6;
+  --info: #1e3a5f;
+  --info-bg: #e8eef5;
+  color-scheme: light;
+}
+
+:root.dark {
+  --canvas: #10151d;
+  --surface: #18212c;
+  --surface-secondary: #202b38;
+  --ink: #f1f5f9;
+  --ink-secondary: #b1bdcc;
+  --line: #354354;
+  --action: #5eead4;
+  --action-ink: #10231f;
+  --focus: #5eead4;
+  --good: #5eead4;
+  --good-bg: #10231f;
+  --warn: #fde68a;
+  --warn-bg: #3a2a10;
+  --bad: #fecdd3;
+  --bad-bg: #3f1d24;
+  --info: #d6e4f5;
+  --info-bg: #1a2838;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-surface-secondary: var(--surface-secondary);
+  --color-ink: var(--ink);
+  --color-ink-secondary: var(--ink-secondary);
+  --color-line: var(--line);
+  --color-action: var(--action);
+  --color-action-ink: var(--action-ink);
+  --color-focus: var(--focus);
+  --color-good: var(--good);
+  --color-good-bg: var(--good-bg);
+  --color-warn: var(--warn);
+  --color-warn-bg: var(--warn-bg);
+  --color-bad: var(--bad);
+  --color-bad-bg: var(--bad-bg);
+  --color-info: var(--info);
+  --color-info-bg: var(--info-bg);
+}
+
+.money {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+* {
+  box-sizing: border-box;
+}
+
+input,
+select,
+textarea {
+  min-width: 0;
+  max-width: 100%;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--canvas);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
