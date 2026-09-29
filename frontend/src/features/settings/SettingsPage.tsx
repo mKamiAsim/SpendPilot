@@ -219,6 +219,9 @@ export function SettingsPage() {
           ))}
         </ul>
       </form>
+      <CategoryPanel />
+      <BackupPanel />
+      <PurgePanel />
       <Button
         className="mt-6"
         variant="secondary"
@@ -232,5 +235,192 @@ export function SettingsPage() {
         Sign out
       </Button>
     </section>
+  );
+}
+
+function PurgePanel() {
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+  return (
+    <form
+      className="mt-6 grid gap-3 rounded-xl border border-line bg-surface p-6"
+      onSubmit={async (event) => {
+        event.preventDefault();
+        setError("");
+        setMessage("");
+        try {
+          await readJson(await api("/api/v1/lifecycle/purge", { method: "POST" }));
+          setMessage("Entries and derived notes older than 18 months were removed. An instalment that still has a balance stays.");
+        } catch (exc) {
+          setError(exc instanceof ApiRequestError ? exc.message : "The purge could not be run.");
+        }
+      }}
+    >
+      <h2 className="text-base font-medium">18-month retention</h2>
+      <p className="text-sm text-ink-secondary">
+        This removes old posted rows, cash entries, and derived notes. A plan with money still outstanding keeps its
+        record.
+      </p>
+      {error ? <p className="text-sm text-bad">{error}</p> : null}
+      {message ? <p className="text-sm">{message}</p> : null}
+      <Button type="submit" variant="secondary">
+        Remove old entries
+      </Button>
+    </form>
+  );
+}
+
+function CategoryPanel() {
+  const [name, setName] = useState("");
+  const [custom, setCustom] = useState<string[]>([]);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    api("/api/v1/categories")
+      .then((response) => readJson<{ custom: string[] }>(response))
+      .then((body) => setCustom(body.custom))
+      .catch(() => undefined);
+  }, []);
+
+  return (
+    <form
+      className="mt-6 grid gap-3 rounded-xl border border-line bg-surface p-6"
+      onSubmit={async (event) => {
+        event.preventDefault();
+        setError("");
+        setMessage("");
+        try {
+          const saved = await readJson<{ name: string }>(
+            await api("/api/v1/categories", { method: "POST", body: JSON.stringify({ name }) }),
+          );
+          setCustom((current) => [...current, saved.name]);
+          setName("");
+          setMessage("Category saved. It can be used on cash entries and instalments.");
+        } catch (exc) {
+          setError(exc instanceof ApiRequestError ? exc.message : "The category could not be saved.");
+        }
+      }}
+    >
+      <h2 className="text-base font-medium">Categories</h2>
+      <p className="text-sm text-ink-secondary">
+        The v1 list stays fixed. Add a name of your own when none of those fit. SpendPilot does not infer a merchant
+        code.
+      </p>
+      <Label htmlFor="category-name">Your category</Label>
+      <Input id="category-name" value={name} onChange={(event) => setName(event.target.value)} />
+      {error ? <p className="text-sm text-bad">{error}</p> : null}
+      {message ? <p className="text-sm">{message}</p> : null}
+      <Button type="submit" disabled={!name.trim()}>
+        Add category
+      </Button>
+      {custom.length > 0 ? <p className="text-sm text-ink-secondary">{custom.join(", ")}</p> : null}
+    </form>
+  );
+}
+
+function BackupPanel() {
+  const [passphrase, setPassphrase] = useState("");
+  const [restorePassphrase, setRestorePassphrase] = useState("");
+  const [includeSecrets, setIncludeSecrets] = useState(false);
+  const [file, setFile] = useState<File | null>(null);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+
+  async function download(event: FormEvent) {
+    event.preventDefault();
+    setError("");
+    setMessage("");
+    try {
+      const created = await readJson<{ id: string }>(
+        await api("/api/v1/lifecycle/backups", {
+          method: "POST",
+          body: JSON.stringify({ passphrase, include_secrets: includeSecrets }),
+        }),
+      );
+      const response = await api(`/api/v1/lifecycle/backups/${created.id}`);
+      if (!response.ok) {
+        throw new ApiRequestError(response.status, "request_failed", "The backup could not be downloaded.");
+      }
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "spendpilot-backup.bin";
+      link.click();
+      URL.revokeObjectURL(url);
+      setMessage("Backup downloaded. SpendPilot stores only the encrypted file.");
+    } catch (exc) {
+      setError(exc instanceof ApiRequestError ? exc.message : "The backup could not be created.");
+    }
+  }
+
+  async function restore(event: FormEvent) {
+    event.preventDefault();
+    if (!file) return;
+    setError("");
+    setMessage("");
+    try {
+      const body = new FormData();
+      body.append("passphrase", restorePassphrase);
+      body.append("file", file);
+      await readJson(await api("/api/v1/lifecycle/restore", { method: "POST", body }));
+      setMessage("Backup restored. Rows older than 18 months were removed again.");
+    } catch (exc) {
+      setError(exc instanceof ApiRequestError ? exc.message : "The backup could not be restored.");
+    }
+  }
+
+  return (
+    <div className="mt-6 grid gap-4">
+      <form onSubmit={download} className="grid gap-4 rounded-xl border border-line bg-surface p-6">
+        <h2 className="text-base font-medium">Encrypted backup</h2>
+        <p className="text-sm text-ink-secondary">
+          Choose a passphrase. The server stores ciphertext and cannot read it. Provider keys and saved PDF passwords stay
+          out unless you include them.
+        </p>
+        <div className="grid gap-2">
+          <Label htmlFor="backup-passphrase">Passphrase</Label>
+          <Input
+            id="backup-passphrase"
+            type="password"
+            autoComplete="new-password"
+            value={passphrase}
+            onChange={(event) => setPassphrase(event.target.value)}
+            required
+            minLength={8}
+          />
+        </div>
+        <label className="flex items-center gap-2 text-sm">
+          <input type="checkbox" checked={includeSecrets} onChange={(event) => setIncludeSecrets(event.target.checked)} />
+          Include provider keys and saved PDF passwords
+        </label>
+        {error ? <p className="text-sm text-bad">{error}</p> : null}
+        {message ? <p className="text-sm">{message}</p> : null}
+        <Button type="submit">Download backup</Button>
+      </form>
+      <form onSubmit={restore} className="grid gap-4 rounded-xl border border-line bg-surface p-6">
+        <h2 className="text-base font-medium">Restore</h2>
+        <div className="grid gap-2">
+          <Label htmlFor="restore-file">Backup file</Label>
+          <Input id="restore-file" type="file" onChange={(event) => setFile(event.target.files?.[0] ?? null)} required />
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="restore-passphrase">Passphrase</Label>
+          <Input
+            id="restore-passphrase"
+            type="password"
+            autoComplete="off"
+            value={restorePassphrase}
+            onChange={(event) => setRestorePassphrase(event.target.value)}
+            required
+            minLength={8}
+          />
+        </div>
+        <Button type="submit" variant="secondary">
+          Restore backup
+        </Button>
+      </form>
+    </div>
   );
 }

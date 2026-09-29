@@ -16,7 +16,7 @@ from app.identity.service import utcnow
 
 SESSION_COOKIE = "spendpilot_session"
 CSRF_COOKIE = "spendpilot_csrf"
-ACTIVITY_EXEMPT_PATHS = {"/api/v1/auth/heartbeat"}
+ACTIVITY_EXEMPT_PATHS = {"/api/v1/auth/heartbeat", "/api/v1/events"}
 LOCKED_OK_PATHS = {"/api/v1/auth/logout", "/api/v1/auth/unlock"}
 
 

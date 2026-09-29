@@ -8,9 +8,10 @@ from fastapi import APIRouter, Request
 from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import text
 
+from app.core.errors import ApiError
 from app.identity.routes import current_user
 from app.ledger.money import money, money_str
-from app.ledger.semantics import CATEGORIES
+from app.lifecycle.routes import category_allowed
 
 router = APIRouter(prefix="/api/v1", tags=["ledger"])
 
@@ -30,13 +31,6 @@ class CashBody(BaseModel):
             date.fromisoformat(value)
         except ValueError as exc:
             raise ValueError("Enter a date as YYYY-MM-DD.") from exc
-        return value
-
-    @field_validator("category")
-    @classmethod
-    def known_category(cls, value: str) -> str:
-        if value not in CATEGORIES:
-            raise ValueError("Choose a category from the v1 list.")
         return value
 
     @field_validator("amount")
@@ -89,6 +83,8 @@ async def list_transactions(request: Request) -> dict:
 @router.post("/cash-entries", status_code=201)
 async def create_cash_entry(body: CashBody, request: Request) -> dict:
     user, _session = await current_user(request)
+    if not await category_allowed(request.state.db, body.category):
+        raise ApiError(422, "invalid_request", "Choose a category from the v1 list or one you added.")
     entry_id = uuid.uuid4()
     await request.state.db.execute(
         text(

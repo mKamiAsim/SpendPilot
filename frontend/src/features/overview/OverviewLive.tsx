@@ -102,6 +102,9 @@ export function OverviewLive() {
           <Link className="mt-4 inline-flex text-sm underline" to="/intelligence/scenarios">
             Open scenarios
           </Link>
+          <Link className="ml-4 mt-4 inline-flex text-sm underline" to="/money/analytics">
+            Open analytics
+          </Link>
         </article>
       ) : (
         <p className="text-sm text-ink-secondary">No briefing is published yet.</p>

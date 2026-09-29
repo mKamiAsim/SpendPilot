@@ -26,6 +26,7 @@ from app.identity.routes import router as auth_router
 from app.ingestion.routes import defer_quietly
 from app.ingestion.routes import router as imports_router
 from app.ledger.routes import router as ledger_router
+from app.lifecycle.routes import router as lifecycle_router
 from app.scenarios.routes import router as scenario_router
 
 correlation_id: ContextVar[str] = ContextVar("correlation_id", default="")
@@ -58,7 +59,7 @@ def create_app() -> FastAPI:
             allow_origins=settings.allowed_origin_list,
             allow_credentials=True,
             allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
-            allow_headers=["Content-Type", "X-CSRF-Token", "X-Correlation-ID"],
+            allow_headers=["Content-Type", "X-CSRF-Token", "X-Correlation-ID", "Last-Event-ID"],
         )
 
     @app.middleware("http")
@@ -140,6 +141,7 @@ def create_app() -> FastAPI:
     app.include_router(agent_router)
     app.include_router(review_router)
     app.include_router(scenario_router)
+    app.include_router(lifecycle_router)
     return app
 
 

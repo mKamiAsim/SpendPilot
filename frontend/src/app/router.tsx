@@ -1,10 +1,11 @@
 import { Navigate, Route, Routes } from "react-router";
 
-import { PlaceholderPage } from "../components/shell/PlaceholderPage";
 import { AppShell } from "../components/shell/AppShell";
 import { AdminPage } from "../features/admin/AdminPage";
 import { AdvisorPage } from "../features/advisor/AdvisorPage";
+import { AnalyticsPage } from "../features/analytics/AnalyticsPage";
 import { CardsPage } from "../features/cards/CardsPage";
+import { ObligationsPage } from "../features/obligations/ObligationsPage";
 import { OverviewPage } from "../features/overview/OverviewPage";
 import { StatementsPage } from "../features/statements/StatementsPage";
 import { PreviewPage } from "../features/preview/PreviewPage";
@@ -20,9 +21,6 @@ import {
 import { ScenariosPage } from "../features/scenarios/ScenariosPage";
 import { SettingsPage } from "../features/settings/SettingsPage";
 import { useSession } from "./session";
-
-const later =
-  "This section is not built in the foundation phase. There is no statement data here, and nothing on this page is a balance.";
 
 export function AppRoutes() {
   const { user, locked, loading } = useSession();
@@ -53,7 +51,8 @@ export function AppRoutes() {
         <Route path="/money/cards" element={<CardsPage />} />
         <Route path="/money/transactions" element={<TransactionsPage />} />
         <Route path="/money/statements" element={<StatementsPage />} />
-        <Route path="/money/obligations" element={<PlaceholderPage title="Obligations" detail={later} />} />
+        <Route path="/money/analytics" element={<AnalyticsPage />} />
+        <Route path="/money/obligations" element={<ObligationsPage />} />
         <Route path="/intelligence/advisor" element={<AdvisorPage />} />
         {import.meta.env.DEV ? <Route path="/dev/components" element={<PreviewPage />} /> : null}
         <Route path="/intelligence/scenarios" element={<ScenariosPage />} />

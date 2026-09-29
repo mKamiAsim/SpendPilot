@@ -1,5 +1,6 @@
 import {
   CalendarClock,
+  ChartColumn,
   CreditCard,
   FileText,
   LayoutDashboard,
@@ -26,6 +27,7 @@ const destinations = [
   { label: "Cards & accounts", to: "/money/cards", icon: CreditCard, group: "Money" },
   { label: "Transactions", to: "/money/transactions", icon: FileText, group: "Money" },
   { label: "Statements", to: "/money/statements", icon: FileText, group: "Money" },
+  { label: "Analytics", to: "/money/analytics", icon: ChartColumn, group: "Money" },
   { label: "Obligations", to: "/money/obligations", icon: CalendarClock, group: "Money" },
   { label: "Advisor", to: "/intelligence/advisor", icon: Sparkles, group: "Intelligence" },
   { label: "Scenarios", to: "/intelligence/scenarios", icon: SlidersHorizontal, group: "Intelligence" },
@@ -80,6 +82,11 @@ export function AppShell() {
     const needle = query.trim().toLowerCase();
     return destinations.filter((item) => item.label.toLowerCase().includes(needle));
   }, [query]);
+
+  useEffect(() => {
+    const source = new EventSource("/api/v1/events");
+    return () => source.close();
+  }, []);
 
   useEffect(() => {
     function onKey(event: KeyboardEvent) {

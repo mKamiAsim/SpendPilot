@@ -51,11 +51,16 @@ def build_fixture_pdf(
     closing: str = "1215.00",
     note: str | None = None,
 ) -> bytes:
-    lines = fixture_lines(closing=closing, note=note)
+    return write_lines_pdf(fixture_lines(closing=closing, note=note), password=password)
+
+
+def write_lines_pdf(lines: list[str], *, password: str | None = None) -> bytes:
     pdf = Pdf.new()
     font = pdf.make_indirect(Dictionary(Type=Name.Font, Subtype=Name.Type1, BaseFont=Name.Helvetica))
     commands = ["BT", "/F1 10 Tf", "48 740 Td", "12 TL"]
     for line in lines:
+        if not line.isascii():
+            raise ValueError("Fixture lines must be plain ASCII.")
         escaped = line.replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)")
         commands.append(f"({escaped}) Tj")
         commands.append("T*")

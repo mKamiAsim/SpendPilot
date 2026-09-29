@@ -49,9 +49,11 @@ async def admin_status(request: Request) -> dict:
     await require_admin(request)
     settings = get_settings()
     queue = await request.state.db.scalar(text("SELECT to_regclass('public.procrastinate_jobs')"))
+    user_count = int(await request.state.db.scalar(text("SELECT app_user_count()")) or 0)
     return {
         "database": "ok",
         "email_delivery": settings.email_mode,
         "queue_schema": "present" if queue else "missing",
         "worker_liveness": "unverified",
+        "user_count": user_count,
     }

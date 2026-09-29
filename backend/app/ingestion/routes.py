@@ -180,7 +180,21 @@ async def review_queue(request: Request) -> dict:
                 "closing_liability": extracted.get("closing_liability"),
                 "computed_closing": extracted.get("computed_closing"),
                 "difference": extracted.get("difference"),
+                "opening_liability": extracted.get("opening_liability"),
+                "period_start": extracted.get("period_start"),
+                "period_end": extracted.get("period_end"),
+                "account_alias": extracted.get("account_alias"),
                 "row_count": len(extracted.get("rows") or []),
+                "rows": [
+                    {
+                        "description": item.get("description"),
+                        "amount": item.get("amount"),
+                        "category": item.get("category"),
+                        "entry_type": item.get("entry_type"),
+                    }
+                    for item in (extracted.get("rows") or [])
+                    if isinstance(item, dict)
+                ],
             }
         )
     return {"review": items}
@@ -201,7 +215,7 @@ async def list_statements(request: Request) -> dict:
     result = await request.state.db.execute(
         text(
             """
-            SELECT statements.id, statements.document_id, statements.period_start, statements.period_end,
+            SELECT statements.id, statements.document_id, statements.kind, statements.period_start, statements.period_end,
                    statements.opening_liability, statements.closing_liability, statements.computed_closing,
                    statements.difference, statements.reconciliation, statements.accept_reason,
                    card_accounts.alias AS account_alias, card_accounts.last4 AS account_last4
@@ -216,7 +230,8 @@ async def list_statements(request: Request) -> dict:
         statements.append(
             {
                 "id": str(row["id"]),
-                "document_id": str(row["document_id"]),
+                "document_id": str(row["document_id"]) if row["document_id"] else None,
+                "kind": row["kind"],
                 "account_alias": row["account_alias"],
                 "account_last4": row["account_last4"],
                 "period_start": row["period_start"].isoformat(),

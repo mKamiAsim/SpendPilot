@@ -10,6 +10,6 @@ A blob is version byte `1`, a one-byte key-id length, the key id, a 12-byte nonc
 
 ## What this is not
 
-The server holds these keys. This is not zero-knowledge. Decision 4 (a user-chosen passphrase for backups, with the server unable to read that archive) is not implemented. Saved PDF passwords and provider keys do not exist yet.
+The server holds these keys. This is not zero-knowledge. Saved PDF passwords and provider keys use this ring. A backup uses a separate user passphrase, recorded in ADR 0009. The server stores that archive as ciphertext and cannot read it.
 
 Files, when a later phase stores them, belong on the `protected-files` volume with metadata in Postgres. That volume is not an encrypted filesystem by itself. Do not treat this Compose file as disk encryption.

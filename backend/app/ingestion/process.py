@@ -174,24 +174,40 @@ def _commit_payload(
     accept_reason: str | None,
     allow_overlap: bool,
 ) -> None:
+    owner = conn.execute("SELECT NULLIF(current_setting('app.owner_id', true), '')::uuid AS owner_id").fetchone()
+    owner_value = owner["owner_id"] if owner else None
+    if owner_value is None:
+        raise _NeedsReview("unreadable", "The file could not be posted.")
+    _apply_rules(conn, payload)
     account = conn.execute(
         "SELECT id FROM card_accounts WHERE last4 = %s",
         (payload["account_last4"],),
     ).fetchone()
+    if account is None and payload.get("kind") == "bank":
+        account_id = uuid.uuid4()
+        conn.execute(
+            """
+            INSERT INTO card_accounts (id, owner_id, alias, last4)
+            VALUES (%s, %s, %s, %s)
+            """,
+            (account_id, owner_value, payload["account_alias"], payload["account_last4"]),
+        )
+        account = {"id": account_id}
     if account is None:
         raise _NeedsReview("unknown_account", "Add the shared account before accepting this file.")
     cards: dict[str, uuid.UUID] = {}
-    for row in payload["rows"]:
-        last4 = row["card_last4"]
-        if last4 in cards:
-            continue
-        card = conn.execute(
-            "SELECT id FROM cards WHERE last4 = %s AND account_id = %s",
-            (last4, account["id"]),
-        ).fetchone()
-        if card is None:
-            raise _NeedsReview("unknown_card", "Add every card on the file before it can post.")
-        cards[last4] = card["id"]
+    if payload.get("kind") != "bank":
+        for row in payload["rows"]:
+            last4 = row["card_last4"]
+            if last4 in cards:
+                continue
+            card = conn.execute(
+                "SELECT id FROM cards WHERE last4 = %s AND account_id = %s",
+                (last4, account["id"]),
+            ).fetchone()
+            if card is None:
+                raise _NeedsReview("unknown_card", "Add every card on the file before it can post.")
+            cards[last4] = card["id"]
     if not allow_overlap:
         overlap = conn.execute(
             """
@@ -214,10 +230,6 @@ def _commit_payload(
             "unreconciled",
             "The stated closing does not match the rows. Nothing was posted.",
         )
-    owner = conn.execute("SELECT NULLIF(current_setting('app.owner_id', true), '')::uuid AS owner_id").fetchone()
-    owner_value = owner["owner_id"] if owner else None
-    if owner_value is None:
-        raise _NeedsReview("unreadable", "The file could not be posted.")
     statement_id = uuid.uuid4()
     try:
         with conn.transaction():
@@ -226,11 +238,11 @@ def _commit_payload(
                 INSERT INTO statements (
                     id, owner_id, document_id, account_id, period_start, period_end,
                     opening_liability, closing_liability, computed_closing, difference,
-                    reconciliation, accept_reason
+                    reconciliation, accept_reason, kind
                 ) VALUES (
                     %s, %s, %s, %s, %s, %s,
                     %s, %s, %s, %s,
-                    %s, %s
+                    %s, %s, %s
                 )
                 """,
                 (
@@ -246,6 +258,7 @@ def _commit_payload(
                     payload["difference"],
                     reconciliation,
                     accept_reason,
+                    payload.get("kind") or "card",
                 ),
             )
             for row in payload["rows"]:
@@ -260,7 +273,7 @@ def _commit_payload(
                         uuid.uuid4(),
                         owner_value,
                         statement_id,
-                        cards[row["card_last4"]],
+                        None if payload.get("kind") == "bank" else cards[row["card_last4"]],
                         row["line_number"],
                         row["posted_on"],
                         row["description"],
@@ -281,8 +294,25 @@ def _commit_payload(
                 """,
                 (Json(payload), document_id),
             )
+            conn.execute(
+                "INSERT INTO user_events (owner_id, body) VALUES (%s, %s)",
+                (owner_value, "statement_posted"),
+            )
     except UniqueViolation:
         _mark_duplicate(conn, document_id)
+
+
+def _apply_rules(conn: psycopg.Connection, payload: dict) -> None:
+    rules = {
+        row["description"]: row["category"]
+        for row in conn.execute("SELECT description, category FROM category_rules").fetchall()
+    }
+    custom = {row["name"] for row in conn.execute("SELECT name FROM user_categories").fetchall()}
+    allowed = CATEGORIES | custom
+    for row in payload["rows"]:
+        replacement = rules.get(row["description"])
+        if replacement in allowed:
+            row["category"] = replacement
 
 
 def _read_text(conn: psycopg.Connection, path: Path, ciphertext: bytes | None) -> str:
@@ -343,6 +373,7 @@ def _payload(extracted) -> dict:
         )
     return {
         "layout": extracted.layout,
+        "kind": extracted.kind,
         "account_alias": extracted.account_alias,
         "account_last4": extracted.account_last4,
         "period_start": extracted.period_start.isoformat(),

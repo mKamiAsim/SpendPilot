@@ -33,6 +33,7 @@ class ExtractedStatement:
     closing_liability: Decimal
     card_last4s: tuple[str, ...]
     rows: tuple[ExtractedRow, ...]
+    kind: str = "card"
 
     def computed_closing(self) -> Decimal:
         total = self.opening_liability
@@ -58,7 +59,12 @@ def detect(text: str) -> bool:
 
 def extract(text: str) -> ExtractedStatement:
     if not detect(text):
-        raise UnsupportedLayout("This file is not the generic AED card layout.")
+        from app.ingestion.bank import detect as bank_detect
+        from app.ingestion.bank import extract as bank_extract
+
+        if bank_detect(text):
+            return bank_extract(text)
+        raise UnsupportedLayout("This file is not a supported synthetic layout.")
     fields: dict[str, str] = {}
     rows: list[ExtractedRow] = []
     cards: list[str] = []

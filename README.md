@@ -1,8 +1,8 @@
 # SpendPilot
 
-Self-hosted personal finance app through the deep review: identity, the ledger, one investigation, and a monthly briefing. It is not production-ready. Do not deploy it.
+Self-hosted personal finance app through the remaining product: identity, the ledger, a monthly briefing, instalments, analytics, and encrypted backup. It is not production-ready. Do not deploy it.
 
-The product name in the interface is SpendPilot. The only statement layout this build reads is a synthetic generic AED card fixture. It does not name a bank. OCR is not installed. No model is bundled.
+The product name in the interface is SpendPilot. Statement layouts are two synthetic fixtures, a generic AED card and a generic AED bank file. Neither names a bank. OCR is not installed. No model is bundled.
 
 `npm run dev` in `frontend/` still shows a development-only September fixture on Overview, Transactions, and Advisor, plus `/dev/components`. Those figures are not in the production build. Cards and statements call the API in every build.
 
@@ -40,12 +40,13 @@ cd frontend && npx playwright test
 
 ## What is unverified
 
-- No bank statement is in the repository. No bank is named. The generic AED card PDF is synthetic.
+- No real bank statement is in the repository. No bank is named. Both PDFs are synthetic. A named bank is not supported.
 - SMTP is not configured and has not been exercised against a real server.
 - No OpenAI-compatible model endpoint is configured. `MODEL_SMOKE_URL` is empty, so the live smoke test stays pending. The CI provider is deterministic and is not a hosted fallback. Live tool-calling and a live deep review are not claimed.
 - OCR engines and language data are not in the image. A scanned PDF fails that file. See `docs/adr/0004-pdf-ocr-licences.md`.
 - Compose was checked with one unencrypted synthetic card PDF: the document worker committed it, a second upload stayed a duplicate, and the card list did not show the shared closing. The wrong-password batch was not repeated against Compose. A files volume created before this image may be owned by root; new volumes are created for uid 10001.
+- Phase 7 is not started. Screenshot review at 200% zoom, a prompt-injection PDF, and a full map of all twenty acceptance criteria are still open.
 
 ## Layout
 
-`backend/app` holds the API, identity, cards, import, and analytics. `frontend/src` holds the shell. `infra/docker` holds the images. `docs/adr` records the phase 0 decisions. `docs/parser-support/matrix.md` lists the one synthetic layout.
+`backend/app` holds the API, identity, cards, import, and analytics. `frontend/src` holds the shell. `infra/docker` holds the images. `docs/adr` records the phase 0 decisions. `docs/parser-support/matrix.md` lists the two synthetic layouts. `docs/adr/0009-backup-passphrase.md` records the backup key.

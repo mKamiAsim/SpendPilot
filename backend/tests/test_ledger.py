@@ -190,6 +190,7 @@ async def test_batch_password_failure_reimport_and_shared_total(client, migrator
         "gross_purchases": "450.00",
         "refunds": "20.00",
         "cash_purchases": "0.00",
+        "instalment_purchases": "0.00",
         "net_spending": "430.00",
         "fees": "25.00",
         "interest": "0.00",

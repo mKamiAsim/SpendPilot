@@ -1010,6 +1010,30 @@
         }
       }
     },
+    "/api/v1/analytics/coverage": {
+      "get": {
+        "tags": [
+          "analytics"
+        ],
+        "summary": "Coverage",
+        "description": "Missing and partial months stay visible. One month is not complete coverage.",
+        "operationId": "coverage_api_v1_analytics_coverage_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Coverage Api V1 Analytics Coverage Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/transactions": {
       "get": {
         "tags": [
@@ -1918,6 +1942,415 @@
           }
         }
       }
+    },
+    "/api/v1/categories": {
+      "get": {
+        "tags": [
+          "lifecycle"
+        ],
+        "summary": "List Categories",
+        "operationId": "list_categories_api_v1_categories_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response List Categories Api V1 Categories Get"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "lifecycle"
+        ],
+        "summary": "Create Category",
+        "operationId": "create_category_api_v1_categories_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CategoryBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Create Category Api V1 Categories Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/instalments": {
+      "post": {
+        "tags": [
+          "lifecycle"
+        ],
+        "summary": "Create Instalment",
+        "operationId": "create_instalment_api_v1_instalments_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InstalmentBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Create Instalment Api V1 Instalments Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/instalments/{plan_id}": {
+      "patch": {
+        "tags": [
+          "lifecycle"
+        ],
+        "summary": "Update Instalment",
+        "operationId": "update_instalment_api_v1_instalments__plan_id__patch",
+        "parameters": [
+          {
+            "name": "plan_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Plan Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PartsBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Update Instalment Api V1 Instalments  Plan Id  Patch"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/instalments/{plan_id}/repayments": {
+      "post": {
+        "tags": [
+          "lifecycle"
+        ],
+        "summary": "Add Repayment",
+        "operationId": "add_repayment_api_v1_instalments__plan_id__repayments_post",
+        "parameters": [
+          {
+            "name": "plan_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Plan Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RepaymentBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Add Repayment Api V1 Instalments  Plan Id  Repayments Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/obligations": {
+      "get": {
+        "tags": [
+          "lifecycle"
+        ],
+        "summary": "Obligations",
+        "operationId": "obligations_api_v1_obligations_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Obligations Api V1 Obligations Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/lifecycle/backups": {
+      "post": {
+        "tags": [
+          "lifecycle"
+        ],
+        "summary": "Create Backup",
+        "operationId": "create_backup_api_v1_lifecycle_backups_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BackupBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Create Backup Api V1 Lifecycle Backups Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/lifecycle/backups/{backup_id}": {
+      "get": {
+        "tags": [
+          "lifecycle"
+        ],
+        "summary": "Download Backup",
+        "operationId": "download_backup_api_v1_lifecycle_backups__backup_id__get",
+        "parameters": [
+          {
+            "name": "backup_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Backup Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/lifecycle/restore": {
+      "post": {
+        "tags": [
+          "lifecycle"
+        ],
+        "summary": "Restore Backup",
+        "operationId": "restore_backup_api_v1_lifecycle_restore_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_restore_backup_api_v1_lifecycle_restore_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Restore Backup Api V1 Lifecycle Restore Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/lifecycle/purge": {
+      "post": {
+        "tags": [
+          "lifecycle"
+        ],
+        "summary": "Run Purge",
+        "operationId": "run_purge_api_v1_lifecycle_purge_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Run Purge Api V1 Lifecycle Purge Post"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/events": {
+      "get": {
+        "tags": [
+          "lifecycle"
+        ],
+        "summary": "Events",
+        "operationId": "events_api_v1_events_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1936,6 +2369,26 @@
           "reason"
         ],
         "title": "AcceptBody"
+      },
+      "BackupBody": {
+        "properties": {
+          "passphrase": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 8,
+            "title": "Passphrase"
+          },
+          "include_secrets": {
+            "type": "boolean",
+            "title": "Include Secrets",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "passphrase"
+        ],
+        "title": "BackupBody"
       },
       "Body_create_import_api_v1_imports_post": {
         "properties": {
@@ -1964,6 +2417,25 @@
           "files"
         ],
         "title": "Body_create_import_api_v1_imports_post"
+      },
+      "Body_restore_backup_api_v1_lifecycle_restore_post": {
+        "properties": {
+          "passphrase": {
+            "type": "string",
+            "title": "Passphrase"
+          },
+          "file": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "File"
+          }
+        },
+        "type": "object",
+        "required": [
+          "passphrase",
+          "file"
+        ],
+        "title": "Body_restore_backup_api_v1_lifecycle_restore_post"
       },
       "CardBody": {
         "properties": {
@@ -2041,6 +2513,21 @@
         ],
         "title": "CashBody"
       },
+      "CategoryBody": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 40,
+            "minLength": 1,
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "CategoryBody"
+      },
       "CloseBody": {
         "properties": {
           "status": {
@@ -2099,6 +2586,45 @@
         "type": "object",
         "title": "HTTPValidationError"
       },
+      "InstalmentBody": {
+        "properties": {
+          "description": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Description"
+          },
+          "category": {
+            "type": "string",
+            "maxLength": 40,
+            "minLength": 1,
+            "title": "Category"
+          },
+          "principal": {
+            "type": "string",
+            "title": "Principal"
+          },
+          "parts": {
+            "type": "integer",
+            "maximum": 60.0,
+            "minimum": 2.0,
+            "title": "Parts"
+          },
+          "posted_on": {
+            "type": "string",
+            "title": "Posted On"
+          }
+        },
+        "type": "object",
+        "required": [
+          "description",
+          "category",
+          "principal",
+          "parts",
+          "posted_on"
+        ],
+        "title": "InstalmentBody"
+      },
       "InvestigationBody": {
         "properties": {
           "question": {
@@ -2149,6 +2675,21 @@
           "body"
         ],
         "title": "MemoryBody"
+      },
+      "PartsBody": {
+        "properties": {
+          "parts": {
+            "type": "integer",
+            "maximum": 60.0,
+            "minimum": 2.0,
+            "title": "Parts"
+          }
+        },
+        "type": "object",
+        "required": [
+          "parts"
+        ],
+        "title": "PartsBody"
       },
       "ProviderBody": {
         "properties": {
@@ -2248,6 +2789,24 @@
           "enabled"
         ],
         "title": "RegistrationBody"
+      },
+      "RepaymentBody": {
+        "properties": {
+          "posted_on": {
+            "type": "string",
+            "title": "Posted On"
+          },
+          "amount": {
+            "type": "string",
+            "title": "Amount"
+          }
+        },
+        "type": "object",
+        "required": [
+          "posted_on",
+          "amount"
+        ],
+        "title": "RepaymentBody"
       },
       "ResetBody": {
         "properties": {

@@ -5,7 +5,13 @@ import { Button } from "../../components/ui/button";
 import { api, readJson } from "../../lib/api";
 
 type Registration = { registration_enabled: boolean };
-type Status = { database: string; email_delivery: string; queue_schema: string; worker_liveness: string };
+type Status = {
+  database: string;
+  email_delivery: string;
+  queue_schema: string;
+  worker_liveness: string;
+  user_count: number;
+};
 
 export function AdminPage() {
   const { user } = useSession();
@@ -29,7 +35,7 @@ export function AdminPage() {
     <section className="mx-auto max-w-3xl">
       <h1 className="text-[1.75rem] font-semibold">Administration</h1>
       <p className="mt-3 text-sm text-ink-secondary">
-        This screen changes registration only. It does not show anyone’s statements.
+        This screen changes registration and shows how many accounts exist. It does not show anyone’s statements.
       </p>
       <div className="mt-6 rounded-xl border border-line bg-surface p-6">
         <h2 className="text-lg font-medium">Public registration</h2>
@@ -68,6 +74,10 @@ export function AdminPage() {
         <div className="flex justify-between gap-4">
           <dt className="text-ink-secondary">Worker liveness</dt>
           <dd>{status.data?.worker_liveness ?? "unverified"}</dd>
+        </div>
+        <div className="flex justify-between gap-4">
+          <dt className="text-ink-secondary">Accounts</dt>
+          <dd>{status.data?.user_count ?? "…"}</dd>
         </div>
       </dl>
     </section>

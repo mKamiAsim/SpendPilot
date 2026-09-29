@@ -34,6 +34,10 @@ type ReviewRow = {
   closing_liability: string | null;
   computed_closing: string | null;
   difference: string | null;
+  opening_liability: string | null;
+  period_start: string | null;
+  period_end: string | null;
+  rows: { description: string; amount: string; category: string; entry_type: string }[];
 };
 
 export function StatementsPage() {
@@ -110,8 +114,8 @@ export function StatementsPage() {
       <p className="text-xs font-medium uppercase tracking-[0.14em] text-ink-secondary">SpendPilot</p>
       <h1 className="mt-2 text-[1.75rem] font-semibold leading-tight">Statements</h1>
       <p className="mt-3 max-w-2xl text-sm text-ink-secondary">
-        Upload PDF statements. This build reads one synthetic generic AED card layout and does not name a bank. A wrong
-        password fails that file only. OCR is not installed, so a scanned page stays unread.
+        Upload PDF statements. This build reads two synthetic layouts, a generic AED card and a generic AED bank file, and
+        does not name a bank. A wrong password fails that file only. OCR is not installed, so a scanned page stays unread.
       </p>
       {error ? <p className="mt-4 text-sm text-bad">{error}</p> : null}
       <form onSubmit={onSubmit} className="mt-6 grid gap-4 rounded-xl border border-line bg-surface p-6">
@@ -145,12 +149,36 @@ export function StatementsPage() {
         {review.map((item) => (
           <li key={item.id} className="rounded-xl border border-line bg-surface p-4">
             <p className="font-medium">{item.original_name}</p>
-            <p className="mt-1 text-sm text-ink-secondary">{item.failure_message}</p>
-            {item.closing_liability ? (
-              <p className="mt-2 text-sm">
-                Stated {item.closing_liability} · Computed {item.computed_closing} · Difference {item.difference}
-              </p>
-            ) : null}
+            <div className="mt-3 grid gap-4 md:grid-cols-2">
+              <div>
+                <h3 className="text-sm font-medium">Extracted rows</h3>
+                {item.rows?.length ? (
+                  <ul className="mt-2 grid gap-2">
+                    {item.rows.map((row, index) => (
+                      <li key={`${item.id}-${index}`} className="text-sm">
+                        <span className="font-medium">{row.description}</span>
+                        <span className="text-ink-secondary">
+                          {" "}
+                          · {row.amount} AED · {row.category} · {row.entry_type.replaceAll("_", " ")}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="mt-2 text-sm text-ink-secondary">No rows were extracted.</p>
+                )}
+              </div>
+              <div>
+                <h3 className="text-sm font-medium">Totals</h3>
+                <p className="mt-2 text-sm text-ink-secondary">{item.failure_message}</p>
+                {item.closing_liability ? (
+                  <p className="mt-2 text-sm">
+                    {item.period_start} to {item.period_end}. Opening {item.opening_liability}. Stated{" "}
+                    {item.closing_liability}. Computed {item.computed_closing}. Difference {item.difference}.
+                  </p>
+                ) : null}
+              </div>
+            </div>
             <div className="mt-3 grid gap-2">
               <Label htmlFor={`reason-${item.id}`}>Reason</Label>
               <Input

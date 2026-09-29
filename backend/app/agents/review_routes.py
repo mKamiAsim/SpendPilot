@@ -13,7 +13,7 @@ from app.core.config import get_settings
 from app.core.errors import ApiError
 from app.identity.routes import current_user
 from app.jobs.queue import defer_review
-from app.ledger.semantics import CATEGORIES
+from app.lifecycle.routes import category_allowed
 
 router = APIRouter(prefix="/api/v1", tags=["advisor"])
 logger = logging.getLogger("spendpilot.reviews")
@@ -167,8 +167,8 @@ async def delete_memory(memory_id: uuid.UUID, request: Request) -> dict:
 @router.post("/corrections", status_code=201)
 async def stage_correction(body: CorrectionBody, request: Request) -> dict:
     user, _session = await current_user(request)
-    if body.category not in CATEGORIES:
-        raise ApiError(422, "invalid_request", "Choose a category from the v1 list.")
+    if not await category_allowed(request.state.db, body.category):
+        raise ApiError(422, "invalid_request", "Choose a category from the v1 list or one you added.")
     current = (
         await request.state.db.execute(
             text("SELECT id, category, description FROM posted_transactions WHERE id = :id"),
@@ -208,7 +208,7 @@ async def stage_correction(body: CorrectionBody, request: Request) -> dict:
 
 @router.post("/corrections/{correction_id}/accept")
 async def accept_correction(correction_id: uuid.UUID, request: Request) -> dict:
-    await current_user(request)
+    user, _session = await current_user(request)
     row = (
         await request.state.db.execute(
             text(
@@ -259,6 +259,27 @@ async def accept_correction(correction_id: uuid.UUID, request: Request) -> dict:
             text("UPDATE scenarios SET stale = true WHERE category = :category"),
             {"category": row["original_category"]},
         )
+        description = await request.state.db.scalar(
+            text("SELECT description FROM posted_transactions WHERE id = :id"),
+            {"id": row["transaction_id"]},
+        )
+        if description:
+            await request.state.db.execute(
+                text(
+                    """
+                    INSERT INTO category_rules (id, owner_id, description, category)
+                    VALUES (:id, :owner_id, :description, :category)
+                    ON CONFLICT (owner_id, description)
+                    DO UPDATE SET category = EXCLUDED.category
+                    """
+                ),
+                {
+                    "id": uuid.uuid4(),
+                    "owner_id": user.id,
+                    "description": description,
+                    "category": row["proposed_category"],
+                },
+            )
     return {
         "id": str(row["id"]),
         "transaction_id": str(row["transaction_id"]),
