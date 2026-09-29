@@ -34,12 +34,23 @@ class Settings(BaseSettings):
     bootstrap_admin_password: str = Field(default="", alias="BOOTSTRAP_ADMIN_PASSWORD")
     log_level: str = Field(default="INFO", alias="LOG_LEVEL")
     file_storage_dir: str = Field(default="/var/lib/spendpilot/files", alias="FILE_STORAGE_DIR")
+    provider_mode: str = Field(default="configured", alias="SPENDPILOT_PROVIDER")
+    model_smoke_url: str = Field(default="", alias="MODEL_SMOKE_URL")
+    model_smoke_api_key: str = Field(default="", alias="MODEL_SMOKE_API_KEY")
+    model_smoke_model: str = Field(default="", alias="MODEL_SMOKE_MODEL")
 
     @field_validator("idle_lock_minutes")
     @classmethod
     def idle_bounds(cls, value: int) -> int:
         if not 5 <= value <= 60:
             raise ValueError("IDLE_LOCK_MINUTES must be between 5 and 60.")
+        return value
+
+    @field_validator("provider_mode")
+    @classmethod
+    def provider_choice(cls, value: str) -> str:
+        if value not in {"configured", "fake"}:
+            raise ValueError("SPENDPILOT_PROVIDER must be configured or fake.")
         return value
 
     @field_validator("email_delivery")

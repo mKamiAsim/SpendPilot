@@ -97,6 +97,9 @@ def database_env() -> Iterator[dict[str, str]]:
         os.environ["FILE_STORAGE_DIR"] = storage
         os.environ["APP_ENCRYPTION_KEYS"] = "test:" + base64.b64encode(b"\x00" * 32).decode()
         os.environ["APP_ENCRYPTION_KEY_ID"] = "test"
+        os.environ["SPENDPILOT_PROVIDER"] = "fake"
+        os.environ.setdefault("MODEL_SMOKE_URL", "")
+        os.environ["MODEL_ALLOWED_PRIVATE_HOSTS"] = ""
         from app.core.config import get_settings
         from app.jobs.queue import apply_queue_schema
 

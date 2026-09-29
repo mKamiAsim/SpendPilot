@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "spendpilot"
 version = "0.1.0"
-description = "SpendPilot ledger slice: identity, cards, statement import, and analytics."
+description = "SpendPilot early advisor: ledger, provider profile, and one validated finding."
 requires-python = ">=3.12"
 dependencies = [
   "fastapi==0.141.1",

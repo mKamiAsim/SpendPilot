@@ -32,9 +32,24 @@ def defer_import(document_id: str, owner_id: str) -> None:
 
 @tasks.task(name="agents.ready", queue="agents")
 def agents_ready() -> str:
-    """Queue registration for the agent worker. No model calls yet."""
+    """Queue registration for the agent worker."""
 
     return "ok"
+
+
+@tasks.task(name="agents.investigate", queue="agents", retry=3)
+def investigate(investigation_id: str, owner_id: str) -> None:
+    """Publish one finding. A retry returns once the investigation is no longer queued."""
+
+    from app.agents.investigate import process_investigation
+
+    process_investigation(investigation_id, owner_id)
+
+
+def defer_investigation(investigation_id: str, owner_id: str) -> None:
+    app = get_queue_app()
+    with app.open():
+        investigate.defer(investigation_id=investigation_id, owner_id=owner_id)
 
 
 def conninfo(url: str) -> str:

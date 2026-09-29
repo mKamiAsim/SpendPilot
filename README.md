@@ -1,6 +1,6 @@
 # SpendPilot
 
-Self-hosted personal finance app through the ledger slice: identity, row-level isolation, cards, statement import, and basic analytics. It is not production-ready. Do not deploy it.
+Self-hosted personal finance app through the early advisor: identity, the ledger, and one evidence-backed investigation. It is not production-ready. Do not deploy it.
 
 The product name in the interface is SpendPilot. The only statement layout this build reads is a synthetic generic AED card fixture. It does not name a bank. OCR is not installed. No model is bundled.
 
@@ -42,7 +42,7 @@ cd frontend && npx playwright test
 
 - No bank statement is in the repository. No bank is named. The generic AED card PDF is synthetic.
 - SMTP is not configured and has not been exercised against a real server.
-- No OpenAI-compatible model endpoint is configured. The SSRF helper does not make a network call.
+- No OpenAI-compatible model endpoint is configured. `MODEL_SMOKE_URL` is empty, so the live smoke test stays pending. The CI provider is deterministic and is not a hosted fallback. Acceptance of live tool-calling is not claimed.
 - OCR engines and language data are not in the image. A scanned PDF fails that file. See `docs/adr/0004-pdf-ocr-licences.md`.
 - Compose was checked with one unencrypted synthetic card PDF: the document worker committed it, a second upload stayed a duplicate, and the card list did not show the shared closing. The wrong-password batch was not repeated against Compose. A files volume created before this image may be owned by root; new volumes are created for uid 10001.
 

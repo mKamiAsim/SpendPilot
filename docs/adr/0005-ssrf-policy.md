@@ -24,4 +24,4 @@ DNS resolution uses `getaddrinfo` unless the host is already an IP. A later clie
 
 ## Unverified
 
-No model endpoint is configured. Nothing in this phase sends a prompt or a tool call. A deterministic fake provider is also not built yet; that belongs to a later phase.
+The connection test now calls this policy before every request, including redirect targets. No live model endpoint is configured in this environment. `MODEL_SMOKE_URL` is empty, so the live smoke test stays pending. The deterministic fake provider does not open a connection. See ADR 0007.

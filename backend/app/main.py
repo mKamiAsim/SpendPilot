@@ -11,6 +11,8 @@ from fastapi.responses import JSONResponse
 from sqlalchemy import text
 
 from app.accounts.routes import router as cards_router
+from app.agents.routes import defer_investigation_quietly
+from app.agents.routes import router as agent_router
 from app.administration.routes import router as admin_router
 from app.analytics.routes import router as analytics_router
 from app.api.deps import enforce_csrf
@@ -90,6 +92,9 @@ def create_app() -> FastAPI:
             pending = getattr(request.state, "pending_imports", ())
             for document_id, owner_id in pending:
                 defer_quietly(document_id, owner_id)
+            pending_investigations = getattr(request.state, "pending_investigations", ())
+            for investigation_id, owner_id in pending_investigations:
+                defer_investigation_quietly(investigation_id, owner_id)
         response.headers["X-Correlation-ID"] = current
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["Referrer-Policy"] = "no-referrer"
@@ -126,6 +131,7 @@ def create_app() -> FastAPI:
     app.include_router(imports_router)
     app.include_router(analytics_router)
     app.include_router(ledger_router)
+    app.include_router(agent_router)
     return app
 
 
