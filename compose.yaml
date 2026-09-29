@@ -1,0 +1,141 @@
+name: spendpilot
+
+services:
+  postgres:
+    image: postgres:18.6
+    environment:
+      POSTGRES_USER: spendpilot_bootstrap
+      POSTGRES_PASSWORD: ${POSTGRES_BOOTSTRAP_PASSWORD}
+      POSTGRES_DB: spendpilot
+      SPENDPILOT_MIGRATOR_PASSWORD: ${SPENDPILOT_MIGRATOR_PASSWORD}
+      SPENDPILOT_APP_PASSWORD: ${SPENDPILOT_APP_PASSWORD}
+    volumes:
+      - postgres-data:/var/lib/postgresql
+      - ./infra/docker/postgres/init-roles.sh:/docker-entrypoint-initdb.d/01-roles.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U spendpilot_bootstrap -d spendpilot"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+    mem_limit: 1g
+    cpus: 1
+
+  api:
+    build:
+      context: .
+      dockerfile: infra/docker/backend/Dockerfile
+    environment: &backend_env
+      SPENDPILOT_PROCESS: api
+      DATABASE_URL_MIGRATOR: postgresql+psycopg://spendpilot_migrator:${SPENDPILOT_MIGRATOR_PASSWORD}@postgres:5432/spendpilot
+      DATABASE_URL_APP: postgresql+psycopg://spendpilot_app:${SPENDPILOT_APP_PASSWORD}@postgres:5432/spendpilot
+      PUBLIC_APP_URL: ${PUBLIC_APP_URL}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
+      COOKIE_SECURE: ${COOKIE_SECURE}
+      IDLE_LOCK_MINUTES: ${IDLE_LOCK_MINUTES}
+      EMAIL_DELIVERY: ${EMAIL_DELIVERY}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USERNAME: ${SMTP_USERNAME}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      SMTP_FROM: ${SMTP_FROM}
+      SMTP_TLS: ${SMTP_TLS}
+      APP_ENCRYPTION_KEYS: ${APP_ENCRYPTION_KEYS}
+      APP_ENCRYPTION_KEY_ID: ${APP_ENCRYPTION_KEY_ID}
+      MODEL_ALLOWED_PRIVATE_HOSTS: ${MODEL_ALLOWED_PRIVATE_HOSTS}
+      TRUST_PROXY: "true"
+      LOG_LEVEL: ${LOG_LEVEL}
+    volumes:
+      - protected-files:/var/lib/spendpilot/files
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/ready')"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+    restart: unless-stopped
+    mem_limit: 512m
+    cpus: 1
+
+  document-worker:
+    build:
+      context: .
+      dockerfile: infra/docker/backend/Dockerfile
+    environment:
+      <<: *backend_env
+      SPENDPILOT_PROCESS: document-worker
+    volumes:
+      - protected-files:/var/lib/spendpilot/files
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-m", "app.workers.healthcheck"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
+    restart: unless-stopped
+    mem_limit: 512m
+    cpus: 1
+
+  agent-worker:
+    build:
+      context: .
+      dockerfile: infra/docker/backend/Dockerfile
+    environment:
+      <<: *backend_env
+      SPENDPILOT_PROCESS: agent-worker
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-m", "app.workers.healthcheck"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
+    restart: unless-stopped
+    mem_limit: 512m
+    cpus: 1
+
+  gateway:
+    build:
+      context: .
+      dockerfile: infra/docker/gateway/Dockerfile
+    ports:
+      - "127.0.0.1:8080:8080"
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://127.0.0.1:8080/healthz"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+    mem_limit: 256m
+    cpus: 0.5
+
+  bootstrap:
+    profiles: ["bootstrap"]
+    build:
+      context: .
+      dockerfile: infra/docker/backend/Dockerfile
+    environment:
+      <<: *backend_env
+      BOOTSTRAP_ADMIN_USERNAME: ${BOOTSTRAP_ADMIN_USERNAME}
+      BOOTSTRAP_ADMIN_EMAIL: ${BOOTSTRAP_ADMIN_EMAIL}
+      BOOTSTRAP_ADMIN_PASSWORD: ${BOOTSTRAP_ADMIN_PASSWORD}
+    command: ["python", "-m", "app.identity.bootstrap"]
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: "no"
+
+volumes:
+  postgres-data:
+  protected-files:

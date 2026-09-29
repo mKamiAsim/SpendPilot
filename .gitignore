@@ -151,6 +151,13 @@ activemq-data/
 .env
 .envrc
 .venv
+
+# Web client. The Python template above ignores every directory named lib/.
+node_modules/
+frontend/test-results/
+frontend/playwright-report/
+!frontend/src/lib/
+!frontend/src/lib/**
 env/
 venv/
 ENV/
