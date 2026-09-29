@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 
 from app.ingestion.adapter import ExtractedRow, ExtractedStatement, InvalidFixture
-from app.ingestion.layouts.common import last4, lines_of, mon_yy, parse_money, slash_date
+from app.ingestion.layouts.common import AMOUNT, last4, lines_of, mon_yy, parse_money, slash_date
 from app.ingestion.synthetic import write_pages_pdf
 
 LAYOUT = "emirates-nbd-mastercard-platinum-v1"
@@ -65,12 +65,43 @@ def build_pdf(*, password: str | None = None) -> bytes:
     return write_pages_pdf(fixture_pages(), password=password)
 
 
+def wrapped_summary_fixture() -> str:
+    """Summary labels wrap, and the six amounts are the following line."""
+
+    return "\n".join(
+        [
+            "Credit Card Statement",
+            "Emirates NBD Bank (P.J.S.C.)",
+            "emiratesnbd.com",
+            "Card Number: 4000 00XX XXXX 3636",
+            "Card Type: MASTERCARD PLATINUM",
+            "Statement Period: 10-Aug-26 to 09-Sep-26",
+            "TRN 100259835700003",
+            "Primary Card Number",
+            "Transaction Date Posting Date Description Amount",
+            "08/09/2026 09/09/2026 MARKET DUBAI ARE 40.00",
+            "01/09/2026 01/09/2026 TRANSFER PAYMENT RECEIVED THANK YOU 80.00CR",
+            "05/09/2026 05/09/2026 Ajyal Internatil Sc Plus Points Redeemed 15.00CR",
+            "STATEMENT SUMMARY",
+            "Previous Statement Purchase / Cash Interest/Other Payments/Credits (AED) Total Payment Due (AED) Current Balance (AED)",
+            "Due (AED) Advance (AED) Charges (AED)",
+            "200.00 40.00 0.00 95.00 145.00 145.00",
+            "PLUS POINTS SUMMARY",
+            "Plus Points Opening Balance Plus Points Earned Plus Points Adjusted Plus Points Redeemed Plus Points Closing Balance",
+            "1000 10 -1350 15 0",
+            "WARNING STATEMENTS",
+            "Foreign Currency transaction fees",
+            "Installment (including finance charges and principle amount)",
+            "Cash Advances",
+        ]
+    )
+
+
 def extract(text: str) -> ExtractedStatement:
     period = PERIOD.search(text)
     if period is None:
         raise InvalidFixture("The Emirates NBD fixture is missing a period.")
-    opening = _labeled(text, "Previous Statement Due (AED)")
-    closing = _labeled(text, "Current Balance (AED)")
+    opening, closing = _summary_pair(text)
     card = ""
     for line in lines_of(text):
         if line.startswith("Card Number:"):
@@ -120,10 +151,25 @@ def extract(text: str) -> ExtractedStatement:
     )
 
 
-def _labeled(text: str, label: str):
-    for line in lines_of(text):
-        if line.startswith(label):
-            return parse_money(line.split()[-1])
+def _summary_pair(text: str):
+    lines = lines_of(text)
+    for index, line in enumerate(lines):
+        if line.startswith("Previous Statement Due (AED)"):
+            opening = parse_money(line.split()[-1])
+            return opening, _labeled(lines, "Current Balance (AED)")
+        wrapped = "Previous Statement" in line and "Current Balance (AED)" in line
+        if wrapped and not AMOUNT.search(line):
+            for follow in lines[index + 1 : index + 4]:
+                amounts = AMOUNT.findall(follow)
+                if len(amounts) == 6:
+                    return parse_money(amounts[0]), parse_money(amounts[-1])
+    raise InvalidFixture("Missing Previous Statement Due (AED).")
+
+
+def _labeled(lines: list[str], label: str):
+    for line in lines:
+        if line.startswith(label) and AMOUNT.search(line):
+            return parse_money(AMOUNT.findall(line)[-1])
     raise InvalidFixture(f"Missing {label}.")
 
 

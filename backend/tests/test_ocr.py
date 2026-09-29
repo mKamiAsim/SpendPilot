@@ -46,6 +46,37 @@ def test_text_pdf_survives_the_ocr_library_import(tmp_path: Path, monkeypatch):
     assert called["n"] == 0
 
 
+def test_jpeg_is_ocr_and_not_opened_as_a_pdf(tmp_path: Path, monkeypatch):
+    from app.ingestion.adapter import extract
+    from app.ingestion.layouts.adcb_bank import ocr_fixture_text
+
+    def explode(*_args, **_kwargs):
+        raise AssertionError("an image was opened with pikepdf")
+
+    monkeypatch.setattr("app.ingestion.extract.Pdf.open", explode)
+    calls: list[list[str]] = []
+
+    def fake_run(cmd, **_kwargs):
+        calls.append(list(cmd))
+
+        class Result:
+            returncode = 0
+            stdout = ocr_fixture_text()
+            stderr = ""
+
+        return Result()
+
+    monkeypatch.setattr("app.ingestion.extract.subprocess.run", fake_run)
+    path = tmp_path / "statement.jpg"
+    Image.new("RGB", (8, 8), "white").save(path, format="JPEG")
+    text = read_statement_text(path, "not-a-password")
+    assert calls and calls[0][0] == "tesseract"
+    assert "not-a-password" not in " ".join(calls[0])
+    statement = extract(text)
+    assert statement.layout == "adcb-privilege-bank-v1"
+    assert any(row.description == "CREDIT CARD PAYMNT" and row.flow == "out" for row in statement.rows)
+
+
 def test_text_pdf_does_not_use_ocr(tmp_path: Path, monkeypatch):
     called = {"n": 0}
 

@@ -3,25 +3,16 @@
 from __future__ import annotations
 
 import re
+from datetime import date
 
 from app.ingestion.adapter import ExtractedRow, ExtractedStatement, InvalidFixture
-from app.ingestion.layouts.common import last4, lines_of, long_date, month_name_date, parse_money
+from app.ingestion.layouts.common import AMOUNT, last4, lines_of, long_date, month_name_date, parse_money
 from app.ingestion.synthetic import write_pages_pdf
 
 LAYOUT = "emirates-islamic-card-v1"
 ROW = re.compile(r"^(\d{2} [A-Za-z]{3})\s+(\d{2} [A-Za-z]{3})\s+(.+)$")
 MONEY = re.compile(r"(\d{1,3}(?:,\d{3})*\.\d{2})(CR)?", re.IGNORECASE)
 CURRENCY = re.compile(r"^[A-Z]{3}$")
-STOP = (
-    "Card Limit",
-    "Available Limit",
-    "Minimum Payment Due",
-    "Payment Due Date",
-    "Total Payment Due",
-    "Profit/Other Charges",
-    "Current Balance",
-    "Warning Statements",
-)
 CASHBACK = "Please view cashback in the EI+ mobile app"
 REWARDS = "Please login to the EI+ App to view the Rewards summary"
 
@@ -82,25 +73,59 @@ def build_pdf(*, password: str | None = None, rewards: bool = False) -> bytes:
     return write_pages_pdf(fixture_pages(rewards=rewards), password=password)
 
 
+def wrapped_fixture() -> str:
+    """From/To are not alone on the line, and the summary strip repeats between rows."""
+
+    return "\n".join(
+        [
+            "Emirates Islamic",
+            "Statement of Card Account",
+            "Card Account Number.: 4000 00XX XXXX 2525",
+            "ABU DHABI From:1st Aug 2026",
+            "To:31st Aug 2026",
+            "OPENING BALANCE 100.00",
+            "PRIMARY CARD NO:400000XXXXXX2525",
+            "02 AUG 02 AUG MARKET DUBAI ARE 50.00",
+            "Card Limit Available Limit Minimum Payment Due Payment Due Date Total Payment Due Profit/Other Charges (AED) Current Balance (AED)",
+            "10,000.00 11,007.36 0.00 25/09/26 0.00 0.00 -1,007.36",
+            "03 AUG 03 AUG CAFE ABU DHABI ARE 15.00",
+            "SUPPLEMENTARY CARD NO: 400000XXXXXX2526",
+            "04 AUG 04 AUG TRANSFER PAYMENT RECEIVED THANK YOU 1,192.36CR",
+            "02 AUG 31 JUL *AMAZON UK 441122334455 722.00 GBP 20.00",
+            "*(1 AED = GBP 0.2000)",
+            "Card Limit Available Limit Minimum Payment Due Payment Due Date Total Payment Due Profit/Other Charges (AED) Current Balance (AED)",
+            "10,000.00 11,007.36 0.00 25/09/26 0.00 0.00 -1,007.36",
+            "Warning Statements",
+            "Over Limit Fee",
+            "Direct Debit Return Fee",
+            "Donation Amount",
+        ]
+    )
+
+
 def extract(text: str) -> ExtractedStatement:
-    period_end = long_date(next(line for line in lines_of(text) if line.startswith("To:")))
-    period_start = long_date(next(line for line in lines_of(text) if line.startswith("From:")))
+    period_end = _period_bound(text, "To:")
+    period_start = _period_bound(text, "From:")
     opening = None
-    closing = None
     for line in lines_of(text):
         if line.startswith("OPENING BALANCE"):
             opening = parse_money(line.split()[-1])
-        if line.startswith("Current Balance"):
-            closing = parse_money(line.split()[-1])
             break
+    closing = _closing_balance(lines_of(text))
     rows: list[ExtractedRow] = []
     current = ""
     cards: list[str] = []
-    stopped = False
+    pending_values = False
     for line in lines_of(text):
-        if stopped or line.startswith(STOP) or line.startswith("*(1 AED ="):
-            if line.startswith(STOP):
-                stopped = True
+        if line.startswith("*(1 AED ="):
+            continue
+        if _combined_summary(line):
+            pending_values = True
+            continue
+        if pending_values:
+            pending_values = False
+            continue
+        if line.startswith("Warning Statements"):
             continue
         if "CARD NO" in line:
             current = last4(line)
@@ -141,6 +166,42 @@ def extract(text: str) -> ExtractedStatement:
         card_last4s=tuple(cards),
         rows=tuple(rows),
     )
+
+
+def _period_bound(text: str, label: str) -> date:
+    for line in lines_of(text):
+        index = line.find(label)
+        if index < 0:
+            continue
+        try:
+            return long_date(line[index:])
+        except ValueError:
+            continue
+    raise InvalidFixture(f"The Emirates Islamic fixture is missing {label}")
+
+
+def _combined_summary(line: str) -> bool:
+    return "Card Limit" in line and "Current Balance" in line
+
+
+def _closing_balance(lines: list[str]):
+    found = None
+    pending_values = False
+    for line in lines:
+        if found is None and line.startswith("Current Balance"):
+            amounts = AMOUNT.findall(line)
+            if amounts:
+                found = parse_money(amounts[-1])
+                continue
+        if _combined_summary(line):
+            pending_values = True
+            continue
+        if pending_values:
+            pending_values = False
+            amounts = AMOUNT.findall(line)
+            if found is None and len(amounts) >= 6:
+                found = parse_money(amounts[-1])
+    return found
 
 
 def _aed_amount(rest: str):

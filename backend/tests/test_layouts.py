@@ -13,11 +13,15 @@ from pikepdf import Pdf
 from app.ingestion.adapter import UnsupportedLayout, extract
 from app.ingestion.extract import read_statement_text
 from app.ingestion.layouts.adcb_bank import ACCOUNT, CUSTOMER, IBAN_VALUE, build_pdf as build_bank
+from app.ingestion.layouts.adcb_bank import ocr_fixture_text
 from app.ingestion.layouts.adcb_lulu import build_pdf as build_lulu
+from app.ingestion.layouts.adcb_lulu import text_layer_fixture
 from app.ingestion.layouts.common import month_name_date
 from app.ingestion.layouts.emirates_islamic import build_pdf as build_ei
 from app.ingestion.layouts.emirates_islamic import fixture_pages as ei_pages
+from app.ingestion.layouts.emirates_islamic import wrapped_fixture
 from app.ingestion.layouts.emirates_nbd import build_pdf as build_enbd
+from app.ingestion.layouts.emirates_nbd import wrapped_summary_fixture
 from app.ledger.money import money
 
 FORBIDDEN = ("7837", "8220", "6719", "5976", "3753", "8792")
@@ -92,6 +96,24 @@ def test_adcb_lulu_credits_and_plan(tmp_path: Path, monkeypatch):
     assert "Drop This Street" not in _blob(statement)
 
 
+def test_lulu_text_layer_without_masthead_labels():
+    statement = extract(text_layer_fixture())
+    assert statement.layout == "adcb-lulu-card-v1"
+    assert "ADCB" not in text_layer_fixture()
+    assert statement.account_last4 == "1414"
+    assert statement.period_end == date(2026, 3, 15)
+    assert statement.card_last4s == ("1415", "1414")
+    assert statement.computed_closing() == statement.closing_liability == money("1147.90")
+    payment = next(row for row in statement.rows if "PAYMENT RECEIVED" in row.description)
+    assert payment.entry_type == "payment"
+    assert payment.amount == money("40.00")
+    assert all("NEW BALANCE" not in row.description for row in statement.rows)
+    assert all(row.amount != money("1147.90") for row in statement.rows)
+    assert "PERSONAL PAYMENT PLAN" not in _blob(statement)
+    assert "75.00" not in _blob(statement)
+    assert "Drop This Street" not in _blob(statement)
+
+
 def test_lulu_text_page_is_not_ocrd_when_page_2_is_an_image(tmp_path: Path, monkeypatch):
     called = {"n": 0}
 
@@ -151,6 +173,25 @@ def test_emirates_islamic_is_one_layout_for_both_products(tmp_path: Path):
     assert cashback.card_last4s == ("2525", "2526")
 
 
+def test_emirates_islamic_keeps_rows_after_a_repeated_summary_strip():
+    statement = extract(wrapped_fixture())
+    assert statement.layout == "emirates-islamic-card-v1"
+    assert statement.period_start == date(2026, 8, 1)
+    assert statement.period_end == date(2026, 8, 31)
+    assert statement.card_last4s == ("2525", "2526")
+    assert statement.closing_liability == money("-1007.36")
+    assert statement.computed_closing() == statement.closing_liability
+    assert len(statement.rows) == 4
+    payment = next(row for row in statement.rows if row.entry_type == "payment")
+    assert payment.amount == money("1192.36")
+    assert payment.card_last4 == "2526"
+    foreign = next(row for row in statement.rows if "AMAZON" in row.description)
+    assert foreign.amount == money("20.00")
+    assert "*(1 AED" not in _blob(statement)
+    assert "Over Limit Fee" not in _blob(statement)
+    assert all(row.amount != money("10000.00") for row in statement.rows)
+
+
 def test_emirates_nbd_ignores_a_fab_filename_and_points_adjustment():
     statement = extract(read_statement_text_bytes(build_enbd()))
     assert statement.layout == "emirates-nbd-mastercard-platinum-v1"
@@ -172,6 +213,21 @@ def test_emirates_nbd_ignores_a_fab_filename_and_points_adjustment():
     replaced = read_statement_text_bytes(build_enbd()).replace("Emirates NBD", "FAB")
     with pytest.raises(UnsupportedLayout):
         extract(replaced)
+
+
+def test_emirates_nbd_reads_a_wrapped_summary_as_one_points_credit():
+    statement = extract(wrapped_summary_fixture())
+    assert statement.computed_closing() == statement.closing_liability == money("145.00")
+    assert statement.opening_liability == money("200.00")
+    redeemed = [row for row in statement.rows if "Plus Points Redeemed" in row.description]
+    assert len(redeemed) == 1
+    assert redeemed[0].entry_type == "cashback"
+    assert redeemed[0].amount == money("15.00")
+    payment = next(row for row in statement.rows if row.entry_type == "payment")
+    assert payment.amount == money("80.00")
+    assert all(row.amount != money("1350.00") for row in statement.rows)
+    assert "Foreign Currency transaction fees" not in _blob(statement)
+    assert "100259835700003" not in _blob(statement)
 
 
 def test_adcb_bank_drops_identifiers_and_keeps_the_card_payment_as_a_transfer():
@@ -196,6 +252,28 @@ def test_adcb_bank_drops_identifiers_and_keeps_the_card_payment_as_a_transfer():
     assert "MBTRF TRF OUT TO SYNTHETIC PERSON" in descriptions
     assert "Send Money via Aani to Synthetic Friend" in descriptions
     assert all(row.entry_type != "purchase" for row in statement.rows)
+    assert len(statement.rows) == 5
+
+
+def test_adcb_bank_ocr_text_drops_garbled_lines_and_identifiers():
+    statement = extract(ocr_fixture_text())
+    assert statement.kind == "bank"
+    assert statement.account_last4 == "0123"
+    assert statement.computed_closing() == statement.closing_liability == money("1360.00")
+    blob = _blob(statement)
+    assert ACCOUNT not in blob
+    assert IBAN_VALUE not in blob
+    assert CUSTOMER not in blob
+    assert "B/F" not in blob
+    assert "Synthetic Person" not in blob
+    assert "999.99" not in blob
+    descriptions = {row.description: row for row in statement.rows}
+    assert descriptions["CREDIT CARD PAYMNT"].entry_type == "transfer"
+    assert descriptions["CREDIT CARD PAYMNT"].flow == "out"
+    assert descriptions["SALARY"].flow == "in"
+    assert descriptions["LOANRECOVERY-EMI"].flow == "out"
+    assert "MBTRF TRF OUT TO" in descriptions
+    assert "Send Money via Aani to Synthetic Friend" in descriptions
     assert len(statement.rows) == 5
 
 

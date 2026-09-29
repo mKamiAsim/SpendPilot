@@ -5,6 +5,8 @@ A page that already has text is not sent through OCR. A scanned page is.
 
 from __future__ import annotations
 
+import os
+import subprocess
 import tempfile
 import threading
 from io import BytesIO
@@ -29,10 +31,43 @@ class OcrError(Exception):
 
 
 def read_statement_text(path: Path, password: str | None) -> str:
+    if _is_raster_image(path):
+        return _ocr_image(path)
     text = _extract_text(path, password)
     if text.strip():
         return text
     return _ocr_scanned(path, password)
+
+
+def _is_raster_image(path: Path) -> bool:
+    try:
+        head = path.read_bytes()[:16]
+    except OSError:
+        return False
+    if head.startswith(b"\xff\xd8\xff") or head.startswith(b"\x89PNG\r\n\x1a\n"):
+        return True
+    if head.startswith(b"%PDF"):
+        return False
+    return path.suffix.lower() in {".jpg", ".jpeg", ".png", ".tif", ".tiff", ".webp"}
+
+
+def _ocr_image(path: Path) -> str:
+    """Read a statement image. This path does not open the file as a PDF."""
+
+    for languages in ("eng+ara", "eng"):
+        try:
+            completed = subprocess.run(
+                ["tesseract", os.fspath(path), "stdout", "-l", languages, "--psm", "6"],
+                check=False,
+                capture_output=True,
+                text=True,
+                timeout=180,
+            )
+        except (OSError, subprocess.TimeoutExpired) as exc:
+            raise OcrError("This scanned page could not be read.") from exc
+        if completed.returncode == 0 and completed.stdout.strip():
+            return completed.stdout
+    raise OcrError("This scanned page could not be read.")
 
 
 def ocr_scanned_page(source: Path, output: Path) -> None:

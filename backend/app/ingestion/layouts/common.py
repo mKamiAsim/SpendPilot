@@ -22,7 +22,8 @@ MONTHS = {
     "NOV": 11,
     "DEC": 12,
 }
-MONEY = re.compile(r"-?\d{1,3}(?:,\d{3})*\.\d{2}")
+# Comma groups or a plain number. A 4-digit amount often has no comma.
+AMOUNT = re.compile(r"-?(?:\d{1,3}(?:,\d{3})+|\d+)\.\d{2}")
 BIDI = re.compile(r"[\u200e\u200f\u202a-\u202e]")
 
 
