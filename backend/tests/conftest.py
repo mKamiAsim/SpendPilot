@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import base64
 import os
 import socket
 import subprocess
+import tempfile
 import time
 import uuid
 from collections.abc import Iterator
@@ -91,8 +93,10 @@ def database_env() -> Iterator[dict[str, str]]:
         os.environ["EMAIL_DELIVERY"] = "capture"
         os.environ["SMTP_HOST"] = ""
         os.environ["IDLE_LOCK_MINUTES"] = "15"
-        os.environ["APP_ENCRYPTION_KEYS"] = ""
-        os.environ["APP_ENCRYPTION_KEY_ID"] = ""
+        storage = tempfile.mkdtemp(prefix="spendpilot-files-")
+        os.environ["FILE_STORAGE_DIR"] = storage
+        os.environ["APP_ENCRYPTION_KEYS"] = "test:" + base64.b64encode(b"\x00" * 32).decode()
+        os.environ["APP_ENCRYPTION_KEY_ID"] = "test"
         from app.core.config import get_settings
         from app.jobs.queue import apply_queue_schema
 

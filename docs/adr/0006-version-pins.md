@@ -23,12 +23,16 @@ PyPI JSON `info.version` on 29 September 2026, locked in `backend/pyproject.toml
 | email-validator | 2.3.0 |
 | procrastinate | 3.10.0 |
 | httpx | 0.28.1 |
+| python-multipart | 0.0.32 |
+| pypdf | 6.19.0 |
+| pikepdf | 10.15.0 |
+| pdfplumber | 0.11.10 |
 | hatchling | 1.32.4 |
 | pytest | 9.1.1 |
 | pytest-asyncio | 1.4.0 |
 | uv | 0.12.20 |
 
-Optional extras are locked and not installed in the runtime image: `pypdf` 6.19.0, `pikepdf` 10.15.0, `pdfplumber` 0.11.10, `ocrmypdf` 17.13.0, `langchain` 1.4.3, `langgraph` 1.2.12, `deepagents` 0.7.19.
+`python-multipart`, `pypdf`, `pikepdf`, and `pdfplumber` are runtime dependencies as of the ledger slice. Optional extras remain locked and are not installed in the runtime image: `ocrmypdf` 17.13.0, `langchain` 1.4.3, `langgraph` 1.2.12, `deepagents` 0.7.19.
 
 ## Frontend
 

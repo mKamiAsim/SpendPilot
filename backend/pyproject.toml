@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "spendpilot"
 version = "0.1.0"
-description = "SpendPilot foundation: identity, isolation, and the application shell."
+description = "SpendPilot ledger slice: identity, cards, statement import, and analytics."
 requires-python = ">=3.12"
 dependencies = [
   "fastapi==0.141.1",
@@ -21,13 +21,14 @@ dependencies = [
   "email-validator==2.3.0",
   "procrastinate==3.10.0",
   "httpx==0.28.1",
+  "python-multipart==0.0.32",
+  "pypdf==6.19.0",
+  "pikepdf==10.15.0",
+  "pdfplumber==0.11.10",
 ]
 
 [project.optional-dependencies]
 documents = [
-  "pypdf==6.19.0",
-  "pikepdf==10.15.0",
-  "pdfplumber==0.11.10",
   "ocrmypdf==17.13.0",
 ]
 agents = [

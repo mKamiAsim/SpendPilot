@@ -4,7 +4,7 @@ Date: 29 September 2026
 
 ## Decision
 
-Text extraction, when the document pipeline is built, will use libraries whose licences were read from the tagged upstream files below. Those packages are locked as optional extras. They are not installed in the phase 1 image, and Tesseract language data is not copied into it.
+Text extraction uses libraries whose licences were read from the tagged upstream files below. Phase 3 installs pypdf, pikepdf, and pdfplumber in the runtime image. OCRmyPDF and Tesseract language data stay optional and are not installed. A file with no extractable text fails on its own.
 
 | Component | Version | Licence | Source checked |
 |---|---|---|---|

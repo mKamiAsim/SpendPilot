@@ -36,7 +36,7 @@ export async function api(path: string, init: RequestInit = {}) {
   const method = (init.method ?? "GET").toUpperCase();
   if (method !== "GET" && method !== "HEAD") {
     headers.set("X-CSRF-Token", await ensureCsrf());
-    if (init.body && !headers.has("Content-Type")) {
+    if (init.body && !(init.body instanceof FormData) && !headers.has("Content-Type")) {
       headers.set("Content-Type", "application/json");
     }
   }

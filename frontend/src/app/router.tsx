@@ -4,7 +4,9 @@ import { PlaceholderPage } from "../components/shell/PlaceholderPage";
 import { AppShell } from "../components/shell/AppShell";
 import { AdminPage } from "../features/admin/AdminPage";
 import { AdvisorPage } from "../features/advisor/AdvisorPage";
+import { CardsPage } from "../features/cards/CardsPage";
 import { OverviewPage } from "../features/overview/OverviewPage";
+import { StatementsPage } from "../features/statements/StatementsPage";
 import { PreviewPage } from "../features/preview/PreviewPage";
 import { TransactionsPage } from "../features/transactions/TransactionsPage";
 import {
@@ -47,9 +49,9 @@ export function AppRoutes() {
     <Routes>
       <Route element={<AppShell />}>
         <Route path="/overview" element={<OverviewPage />} />
-        <Route path="/money/cards" element={<PlaceholderPage title="Cards & accounts" detail={later} />} />
+        <Route path="/money/cards" element={<CardsPage />} />
         <Route path="/money/transactions" element={<TransactionsPage />} />
-        <Route path="/money/statements" element={<PlaceholderPage title="Statements" detail={later} />} />
+        <Route path="/money/statements" element={<StatementsPage />} />
         <Route path="/money/obligations" element={<PlaceholderPage title="Obligations" detail={later} />} />
         <Route path="/intelligence/advisor" element={<AdvisorPage />} />
         {import.meta.env.DEV ? <Route path="/dev/components" element={<PreviewPage />} /> : null}

@@ -33,6 +33,7 @@ class Settings(BaseSettings):
     bootstrap_admin_email: str = Field(default="", alias="BOOTSTRAP_ADMIN_EMAIL")
     bootstrap_admin_password: str = Field(default="", alias="BOOTSTRAP_ADMIN_PASSWORD")
     log_level: str = Field(default="INFO", alias="LOG_LEVEL")
+    file_storage_dir: str = Field(default="/var/lib/spendpilot/files", alias="FILE_STORAGE_DIR")
 
     @field_validator("idle_lock_minutes")
     @classmethod

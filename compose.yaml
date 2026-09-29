@@ -45,6 +45,7 @@ services:
       MODEL_ALLOWED_PRIVATE_HOSTS: ${MODEL_ALLOWED_PRIVATE_HOSTS}
       TRUST_PROXY: "true"
       LOG_LEVEL: ${LOG_LEVEL}
+      FILE_STORAGE_DIR: /var/lib/spendpilot/files
     volumes:
       - protected-files:/var/lib/spendpilot/files
     depends_on:

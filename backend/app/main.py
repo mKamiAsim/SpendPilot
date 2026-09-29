@@ -10,13 +10,18 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from sqlalchemy import text
 
+from app.accounts.routes import router as cards_router
 from app.administration.routes import router as admin_router
+from app.analytics.routes import router as analytics_router
 from app.api.deps import enforce_csrf
 from app.api.records import router as records_router
 from app.core.config import get_settings
 from app.core.db import create_session_factory
 from app.core.errors import ApiError
 from app.identity.routes import router as auth_router
+from app.ingestion.routes import defer_quietly
+from app.ingestion.routes import router as imports_router
+from app.ledger.routes import router as ledger_router
 
 correlation_id: ContextVar[str] = ContextVar("correlation_id", default="")
 logger = logging.getLogger("spendpilot")
@@ -82,6 +87,9 @@ def create_app() -> FastAPI:
                 failed.headers["X-Correlation-ID"] = current
                 return failed
             await session.commit()
+            pending = getattr(request.state, "pending_imports", ())
+            for document_id, owner_id in pending:
+                defer_quietly(document_id, owner_id)
         response.headers["X-Correlation-ID"] = current
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["Referrer-Policy"] = "no-referrer"
@@ -114,6 +122,10 @@ def create_app() -> FastAPI:
     app.include_router(auth_router)
     app.include_router(records_router)
     app.include_router(admin_router)
+    app.include_router(cards_router)
+    app.include_router(imports_router)
+    app.include_router(analytics_router)
+    app.include_router(ledger_router)
     return app
 
 

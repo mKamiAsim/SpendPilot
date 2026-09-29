@@ -10,7 +10,8 @@ COPY backend/app ./app
 COPY backend/migrations ./migrations
 COPY backend/alembic.ini ./
 RUN uv sync --frozen --no-dev --no-editable \
-    && chown -R spendpilot:spendpilot /srv
+    && mkdir -p /var/lib/spendpilot/files \
+    && chown -R spendpilot:spendpilot /srv /var/lib/spendpilot
 
 USER spendpilot
 ENV PATH="/srv/.venv/bin:$PATH" \

@@ -10,9 +10,24 @@ tasks = Blueprint()
 
 @tasks.task(name="documents.ready", queue="documents")
 def documents_ready() -> str:
-    """Queue registration for the document worker. No document processing yet."""
+    """Queue registration for the document worker."""
 
     return "ok"
+
+
+@tasks.task(name="documents.import_file", queue="documents", retry=5)
+def import_document(document_id: str, owner_id: str) -> None:
+    """Decrypt and post one file. A retry returns once the document is no longer queued."""
+
+    from app.ingestion.process import process_document
+
+    process_document(document_id, owner_id)
+
+
+def defer_import(document_id: str, owner_id: str) -> None:
+    app = get_queue_app()
+    with app.open():
+        import_document.defer(document_id=document_id, owner_id=owner_id)
 
 
 @tasks.task(name="agents.ready", queue="agents")

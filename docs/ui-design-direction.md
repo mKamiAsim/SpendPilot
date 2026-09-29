@@ -1,6 +1,6 @@
 # SpendPilot visual direction
 
-Phase 2 only. The three screens below are a development preview. They are not the ledger, and they do not call a model.
+The September screens below stay a development preview. They load only when the Vite dev server is running, and they do not call a model. Cards, statements, and the production transaction list use the ledger API. The shared closing balance is shown once on the statement.
 
 ## References
 
