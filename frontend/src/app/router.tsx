@@ -3,6 +3,10 @@ import { Navigate, Route, Routes } from "react-router";
 import { PlaceholderPage } from "../components/shell/PlaceholderPage";
 import { AppShell } from "../components/shell/AppShell";
 import { AdminPage } from "../features/admin/AdminPage";
+import { AdvisorPage } from "../features/advisor/AdvisorPage";
+import { OverviewPage } from "../features/overview/OverviewPage";
+import { PreviewPage } from "../features/preview/PreviewPage";
+import { TransactionsPage } from "../features/transactions/TransactionsPage";
 import {
   ForgotPage,
   LoginPage,
@@ -42,12 +46,13 @@ export function AppRoutes() {
   return (
     <Routes>
       <Route element={<AppShell />}>
-        <Route path="/overview" element={<PlaceholderPage title="Overview" detail={later} />} />
+        <Route path="/overview" element={<OverviewPage />} />
         <Route path="/money/cards" element={<PlaceholderPage title="Cards & accounts" detail={later} />} />
-        <Route path="/money/transactions" element={<PlaceholderPage title="Transactions" detail={later} />} />
+        <Route path="/money/transactions" element={<TransactionsPage />} />
         <Route path="/money/statements" element={<PlaceholderPage title="Statements" detail={later} />} />
         <Route path="/money/obligations" element={<PlaceholderPage title="Obligations" detail={later} />} />
-        <Route path="/intelligence/advisor" element={<PlaceholderPage title="Advisor" detail={later} />} />
+        <Route path="/intelligence/advisor" element={<AdvisorPage />} />
+        {import.meta.env.DEV ? <Route path="/dev/components" element={<PreviewPage />} /> : null}
         <Route path="/intelligence/scenarios" element={<PlaceholderPage title="Scenarios" detail={later} />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/admin" element={<AdminPage />} />

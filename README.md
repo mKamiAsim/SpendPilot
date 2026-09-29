@@ -2,7 +2,9 @@
 
 Self-hosted personal finance foundation. This tree is phases 0 and 1 only: decisions, Compose, identity, row-level isolation, and the application shell. It is not production-ready. Do not deploy it.
 
-The product name in the interface is SpendPilot. Statement import, the ledger, and the advisor are later phases and are not in this build.
+The product name in the interface is SpendPilot. Statement import and the ledger are later phases.
+
+`npm run dev` in `frontend/` shows a development-only September fixture on Overview, Transactions, and Advisor, plus `/dev/components`. Those figures are not in the production build. They are not a statement and they do not name a bank. The production gateway shows an empty state instead.
 
 ## Run locally
 
