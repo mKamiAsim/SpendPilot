@@ -72,9 +72,21 @@ def prepare_provider(mode: str, profile) -> bool:
     return True
 
 
-def delegate_wave(mode: str, profile, snapshot: dict) -> dict:
+def delegate_wave(
+    mode: str,
+    profile,
+    snapshot: dict,
+    *,
+    conn=None,
+    review_id: str | None = None,
+    owner_id: str | None = None,
+) -> dict:
     prepare_provider(mode, profile)
+    from app.agents.harness import run_monthly_harness
+
+    run_monthly_harness(conn, review_id or "local", owner_id)
     budget = Budget()
+    budget.charge(1)
     wave = run_wave(plan_roles("monthly"), snapshot, budget, depth=1)
     wave["call_count"] = budget.calls
     wave["live"] = mode == "configured"
@@ -147,7 +159,14 @@ def _one_step(conn, review_id: str, owner_id: str) -> bool:
     if step == "delegate":
         try:
             body = _body(conn, row["snapshot_id"])
-            wave = delegate_wave(row["provider_mode"], profile, body)
+            wave = delegate_wave(
+                row["provider_mode"],
+                profile,
+                body,
+                conn=conn,
+                review_id=str(review_id),
+                owner_id=str(owner_id),
+            )
             state["live"] = wave["live"]
             state["specialists"] = wave["specialists"]
             state["scenario"] = wave["scenario"]

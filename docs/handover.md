@@ -2,7 +2,7 @@
 
 SpendPilot is not production-ready. A green build does not make it a deployment. The interface name is SpendPilot. No bank is named. No model is bundled. No secret is in the repository.
 
-`cd backend && uv run pytest -q` on 29 September 2026: 47 passed, 1 skipped. The skip is `test_live_openai_compatible_smoke` because `MODEL_SMOKE_URL` is empty. Playwright against the gateway: `tests/ui-qa.spec.ts`, `tests/shell.spec.ts`, and `tests/product.spec.ts` passed. Compose was left on `SPENDPILOT_PROVIDER=configured`.
+`cd backend && uv run pytest -q` on 29 September 2026: 54 passed, 1 skipped. The skip is `tests/test_agent.py` because `MODEL_SMOKE_URL` is empty. Live tool-calling stays unverified. This pass re-ran `frontend/tests/shell.spec.ts` and `frontend/tests/product.spec.ts` against the gateway. The statements page shows English and Arabic OCR for a scanned page, and that a text PDF is not sent through OCR. The phase 7 screenshots were not retaken. Compose stays on `SPENDPILOT_PROVIDER=configured`.
 
 ## Implemented and tested
 
@@ -27,23 +27,30 @@ These criteria have deterministic tests. They do not need a live model or a real
 19. Compose starts from `.env.example` and the documented commands. The gateway is same-site on `127.0.0.1:8080`. Fonts are self-hosted. This was not a fresh-machine install.
 20. `docs/parser-support/matrix.md` lists two synthetic layouts and rejects every other file. `test_parser_matrix_lists_synthetic_layouts_only`. No real bank is advertised as supported.
 
-CI is `.github/workflows/ci.yml`. The job sets `SPENDPILOT_PROVIDER=fake` and an empty `MODEL_SMOKE_URL`, then runs pytest. `test_ci_uses_the_fake_provider` checks that the test process is on the fake provider and that the smoke URL is empty. The workflow has not been observed on GitHub from this machine. Playwright is not in that workflow because it needs the gateway.
+Owner-scoped LangGraph checkpoints are tested. `langgraph_checkpoints` and `langgraph_checkpoint_writes` carry `owner_id` and forced row-level security. The migrator cannot create a schema, so the tables are in `public`. `test_one_user_cannot_read_another_users_langgraph_checkpoint` shows another session gets no row. `review_checkpoints` is still the step log.
+
+The monthly review builds a Deep Agents graph. Shell, code execution, the host filesystem, and open-web tools are excluded, and `test_forbidden_tools_cannot_turn_on` shows they cannot be turned on. Caps stay at 40 model calls, delegation depth 2, two specialists at once, and a 10-minute deadline. Behaviour and scenario are roles, not extra servers. A short question does not call them. Mutations stay staged until the user confirms them. The in-process model does not open a socket. Document assistance stays off.
+
+OCR runs only when a PDF has no text layer. `test_text_pdf_does_not_use_ocr` and `test_text_pdf_survives_the_ocr_library_import` cover a text PDF. `test_scanned_page_uses_english_and_arabic_ocr` checks languages `eng` and `ara` on a synthetic image. `test_ocr_does_not_receive_the_pdf_password` checks the password is not an OCR argument. ADR 0004 records the Apache-2.0 licence check for Debian `tesseract-ocr` 5.3.0-2, `tesseract-ocr-eng` 1:4.1.0-2, and `tesseract-ocr-ara` 1:4.1.0-2. The document-worker image lists `eng` and `ara` and keeps those copyright files.
+
+CI is `.github/workflows/ci.yml`. The job sets `SPENDPILOT_PROVIDER=fake` and an empty `MODEL_SMOKE_URL`, installs the English and Arabic Tesseract packages, installs the agent and document extras, then runs pytest. `test_ci_uses_the_fake_provider` checks that file and that the test process is on the fake provider. The workflow has not been observed on GitHub from this machine. Playwright is not in that workflow because it needs the gateway.
 
 The investigation prompt tells the model that transaction descriptions are untrusted data, not instructions. That sentence does not by itself prove a live model will ignore them.
 
 ## Implemented but externally unverified
 
 - Criterion 11. The live smoke test is skipped while `MODEL_SMOKE_URL` is empty. A fake-provider finding is not this criterion.
-- Criterion 13, live half. Caps, cancel, resume, one briefing, and an honest SSRF failure are tested on the fake path (`test_short_questions_do_not_delegate_and_caps_hold`, `test_replay_publishes_one_briefing_and_one_accepted_target`, `test_configured_review_does_not_fall_back`). A complex monthly review against a real model was not run.
+- Criterion 13, live half. Caps, cancel, resume, one briefing, and an honest SSRF failure are tested on the fake path (`test_short_questions_do_not_delegate_and_caps_hold`, `test_replay_publishes_one_briefing_and_one_accepted_target`, `test_configured_review_does_not_fall_back`). The locked Deep Agents graph was driven by the in-process model. A complex monthly review against a real model was not run.
 - Criterion 12, live half. Redaction is tested against the scripted client and stored snapshots. A packet captured at a real model endpoint was not.
 - Criterion 10, operating-system half. The fake provider does not construct an HTTP client. Networking was not blocked outside the process.
 - Live SMTP. `test_reset_stays_off_without_smtp` checks the empty-host path. No message was sent through a mail server.
 - Visual contrast, and the evidence drawer, were not part of the phase 7 screenshot pass.
 - The GitHub Actions run itself. The workflow file is in the tree. This environment did not watch it go green.
+- OCR of a real scanned statement. The scanned-page test uses a synthetic image that says HELLO. That is not a bank PDF. A statement was not imported through the new document-worker image.
 
 ## Deferred
 
-OCR and scanned statements, named bank layouts, LangGraph and Deep Agents, Arabic and RTL, an offline installer, rewards and MCC, foreign exchange, bank login, bundled model weights, and a production deployment. See ADR 0004 and ADR 0008.
+Arabic and right-to-left UI, rewards and MCC optimisation, foreign-exchange accounting, SMS ingestion, mobile packaging, an offline installer, bank login, payments, bundled model weights, a production deployment, and named bank layouts. See ADR 0004 and ADR 0008.
 
 ## Blocked
 

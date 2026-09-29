@@ -16,8 +16,8 @@ Each worker writes `/tmp/spendpilot-worker-alive` every 5 seconds. The container
 
 ## Row-level security
 
-Procrastinate’s schema is not covered by the owner policies. These tables hold no user payloads in this phase. Owner-scoped jobs and LangGraph checkpoints are later work. The runtime role is still not a superuser and not `BYPASSRLS`.
+Procrastinate’s schema is not covered by the owner policies. These tables hold no user payloads. Owner-scoped jobs remain later work. LangGraph checkpoints are separate owner-scoped tables in ADR 0008. The runtime role is still not a superuser and not `BYPASSRLS`.
 
 ## Workers
 
-`document-worker` listens on `documents`. `agent-worker` listens on `agents`. Neither has a shell tool, a filesystem tool, or an open network tool. The document worker is not given outbound network beyond Postgres, which Compose already provides to every backend container. A later document image will drop extra network and add OCR assets. This image does not install the document or agent extras.
+`document-worker` listens on `documents`. `agent-worker` listens on `agents`. Neither has a shell tool, a filesystem tool, or an open network tool. The document worker is not given outbound network beyond Postgres, which Compose already provides to every backend container. The image installs the document and agent extras. English and Arabic OCR assets are the Debian Tesseract packages. See ADR 0004 and ADR 0008.

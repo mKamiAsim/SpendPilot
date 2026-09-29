@@ -14,6 +14,8 @@ CUTOFF = "(CURRENT_DATE - INTERVAL '18 months')::date"
 
 STATEMENTS = (
     f"DELETE FROM memories WHERE created_at::date < {CUTOFF}",
+    f"DELETE FROM langgraph_checkpoint_writes WHERE created_at::date < {CUTOFF}",
+    f"DELETE FROM langgraph_checkpoints WHERE created_at::date < {CUTOFF}",
     f"DELETE FROM review_checkpoints WHERE created_at::date < {CUTOFF}",
     f"DELETE FROM findings WHERE created_at::date < {CUTOFF}",
     f"DELETE FROM briefings WHERE created_at::date < {CUTOFF}",

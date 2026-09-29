@@ -32,7 +32,7 @@ PyPI JSON `info.version` on 29 September 2026, locked in `backend/pyproject.toml
 | pytest-asyncio | 1.4.0 |
 | uv | 0.12.20 |
 
-`python-multipart`, `pypdf`, `pikepdf`, and `pdfplumber` are runtime dependencies as of the ledger slice. Optional extras remain locked and are not installed in the runtime image: `ocrmypdf` 17.13.0, `langchain` 1.4.3, `langgraph` 1.2.12, `deepagents` 0.7.19.
+`python-multipart`, `pypdf`, `pikepdf`, and `pdfplumber` are runtime dependencies as of the ledger slice. The runtime image and CI also install the locked extras: `ocrmypdf` 17.13.0, `langchain` 1.4.3, `langgraph` 1.2.12, `deepagents` 0.7.19. CI still sets `SPENDPILOT_PROVIDER=fake` and does not call a hosted model.
 
 ## Frontend
 

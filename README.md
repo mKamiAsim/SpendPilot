@@ -2,7 +2,7 @@
 
 Self-hosted personal finance app through hardening: identity, the ledger, a monthly briefing, instalments, analytics, encrypted backup, and the acceptance-criteria map. It is not production-ready. Do not deploy it. The handover is `docs/handover.md`. The screenshot pass is `docs/ui-qa.md`.
 
-The product name in the interface is SpendPilot. Statement layouts are two synthetic fixtures, a generic AED card and a generic AED bank file. Neither names a bank. OCR is not installed. No model is bundled.
+The product name in the interface is SpendPilot. Statement layouts are two synthetic fixtures, a generic AED card and a generic AED bank file. Neither names a bank. A text PDF is not sent through OCR. A scanned page uses the English and Arabic Tesseract data in the image. No model is bundled.
 
 `npm run dev` in `frontend/` still shows a development-only September fixture on Overview, Transactions, and Advisor, plus `/dev/components`. Those figures are not in the production build. Cards and statements call the API in every build.
 
@@ -43,7 +43,7 @@ cd frontend && npx playwright test
 - No real bank statement is in the repository. No bank is named. Both PDFs are synthetic. A named bank is not supported.
 - SMTP is not configured and has not been exercised against a real server.
 - No OpenAI-compatible model endpoint is configured. `MODEL_SMOKE_URL` is empty, so the live smoke test stays pending. The CI provider is deterministic and is not a hosted fallback. Live tool-calling and a live deep review are not claimed.
-- OCR engines and language data are not in the image. A scanned PDF fails that file. See `docs/adr/0004-pdf-ocr-licences.md`.
+- A scanned page is OCR'd only when the file has no text layer. The image includes Tesseract English and Arabic data under their Apache-2.0 notices. See `docs/adr/0004-pdf-ocr-licences.md`. No authorised bank statement was used, so OCR of a real statement is unverified. OCR text is not sent to a model. Document assistance stays off.
 - Compose was checked with one unencrypted synthetic card PDF: the document worker committed it, a second upload stayed a duplicate, and the card list did not show the shared closing. The wrong-password batch was not repeated against Compose. A files volume created before this image may be owned by root; new volumes are created for uid 10001.
 - Phase 7 mapped the twenty acceptance criteria in `docs/handover.md`. A green test run is not a production claim. Criteria 11 and the live half of 13 stay unverified while `MODEL_SMOKE_URL` is empty. The parser matrix, prompt-injection PDF, cross-user ids, and secret redaction are covered by `backend/tests/test_hardening.py`. CI sets `SPENDPILOT_PROVIDER=fake` and does not fall back to a hosted model.
 

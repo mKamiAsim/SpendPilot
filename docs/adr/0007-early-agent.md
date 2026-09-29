@@ -10,7 +10,7 @@ Phase 4 speaks to an OpenAI-compatible HTTP endpoint saved on the user's provide
 
 The connection test and every redirect call `validate_endpoint` before the next request. Credentials are not sent to a different host after a redirect. The probe body is the sentence "Reply with ready." and contains no ledger data.
 
-A finding is stored only when its amount equals the snapshot's net spending and every evidence id is in that snapshot. Monthly reviews, specialist roles, and owner-scoped checkpoints are in ADR 0008. The optional `agents` extra is still not installed in the image.
+A finding is stored only when its amount equals the snapshot's net spending and every evidence id is in that snapshot. Monthly reviews, specialist roles, and owner-scoped checkpoints are in ADR 0008. The `agents` extra is installed. A live model still does not drive that harness while `MODEL_SMOKE_URL` is empty.
 
 ## Unverified
 

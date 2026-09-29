@@ -34,6 +34,8 @@ HIDDEN_TABLES = (
     "backups",
     "snapshots",
     "review_checkpoints",
+    "langgraph_checkpoints",
+    "langgraph_checkpoint_writes",
     "reviews",
     "cards",
     "provider_profiles",
@@ -50,6 +52,12 @@ def test_ci_uses_the_fake_provider(database_env):
     assert smoke == ""
     for hosted in ("api.openai.com", "openrouter.ai", "api.groq.com", "generativelanguage.googleapis.com"):
         assert hosted not in smoke
+    workflow = (ROOT / ".github" / "workflows" / "ci.yml").read_text()
+    assert "SPENDPILOT_PROVIDER: fake" in workflow
+    assert 'MODEL_SMOKE_URL: ""' in workflow
+    assert "tesseract-ocr-eng" in workflow
+    assert "tesseract-ocr-ara" in workflow
+    assert "--extra agents --extra documents" in workflow
 
 
 def test_parser_matrix_lists_synthetic_layouts_only():

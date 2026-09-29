@@ -15,7 +15,7 @@ from psycopg.types.json import Json
 from app.core.config import Settings, get_settings
 from app.core.crypto import EncryptionError, parse_key_ring
 from app.ingestion.adapter import InvalidFixture, UnsupportedLayout, extract
-from app.ingestion.extract import DecryptError, read_statement_text
+from app.ingestion.extract import DecryptError, OcrError, read_statement_text
 from app.jobs.queue import conninfo
 from app.ledger.money import TOLERANCE, money, money_str
 from app.ledger.semantics import CATEGORIES, LIABILITY_DECREASE, LIABILITY_INCREASE
@@ -108,6 +108,9 @@ def _process_locked(conn: psycopg.Connection, document: dict, settings: Settings
         code = "too_many_pages" if "30 pages" in str(exc) else "wrong_password"
         _fail(conn, document_id, code, _public_failure(code))
         return
+    except OcrError:
+        _fail(conn, document_id, "no_text", "This scanned page produced no text.")
+        return
     except EncryptionError:
         _fail(conn, document_id, "encryption_unconfigured", "The saved password could not be read.")
         return
@@ -120,7 +123,7 @@ def _process_locked(conn: psycopg.Connection, document: dict, settings: Settings
         return
 
     if not text.strip():
-        _fail(conn, document_id, "no_text", "This file has no extractable text. OCR is not installed.")
+        _fail(conn, document_id, "no_text", "This scanned page produced no text.")
         return
     try:
         extracted = extract(text)
