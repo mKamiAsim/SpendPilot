@@ -1,4 +1,5 @@
-import { Navigate, Route, Routes } from "react-router";
+import { useEffect } from "react";
+import { Navigate, Route, Routes, useLocation } from "react-router";
 
 import { AppShell } from "../components/shell/AppShell";
 import { AdminPage } from "../features/admin/AdminPage";
@@ -24,6 +25,10 @@ import { useSession } from "./session";
 
 export function AppRoutes() {
   const { user, locked, loading } = useSession();
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
   if (loading) {
     return (
       <main className="grid min-h-screen place-items-center bg-canvas text-ink">

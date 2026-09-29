@@ -118,18 +118,19 @@ export function AppShell() {
           </nav>
         </aside>
         <div className="flex min-w-0 flex-1 flex-col">
-          <header className="flex h-16 items-center gap-3 border-b border-line bg-surface px-4 md:px-8">
+          <header className="flex min-h-16 flex-wrap items-center gap-2 border-b border-line bg-surface px-4 py-2 md:h-16 md:flex-nowrap md:gap-3 md:px-8 md:py-0">
             <Button
               variant="secondary"
               size="sm"
-              className="md:hidden"
+              className="md:hidden max-[240px]:px-2"
               aria-expanded={menuOpen}
               aria-controls="mobile-navigation"
+              aria-label="Open menu"
               data-testid="open-menu"
               onClick={() => setMenuOpen(true)}
             >
               <Menu aria-hidden="true" size={18} />
-              Menu
+              <span className="max-[240px]:sr-only">Menu</span>
             </Button>
             <Wordmark className="md:hidden" />
             <Button variant="secondary" size="sm" className="ml-auto" onClick={() => setPaletteOpen(true)}>

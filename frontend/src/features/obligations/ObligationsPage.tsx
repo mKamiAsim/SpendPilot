@@ -83,7 +83,7 @@ export function ObligationsPage() {
   }
 
   return (
-    <section className="mx-auto max-w-3xl">
+    <section className="mx-auto min-w-0 max-w-3xl">
       <p className="text-xs font-medium uppercase tracking-[0.14em] text-ink-secondary">SpendPilot</p>
       <h1 className="mt-2 text-[1.75rem] font-semibold leading-tight">Obligations</h1>
       <p className="mt-3 text-sm text-ink-secondary">
@@ -91,13 +91,13 @@ export function ObligationsPage() {
       </p>
       <p className="mt-4 text-sm">Monthly commitment {commitment} AED</p>
       {error ? <p className="mt-4 text-sm text-bad">{error}</p> : null}
-      <form onSubmit={addPlan} className="mt-6 grid gap-4 rounded-xl border border-line bg-surface p-6">
+      <form onSubmit={addPlan} className="mt-6 grid min-w-0 gap-4 rounded-xl border border-line bg-surface p-4 sm:p-6">
         <h2 className="text-base font-medium">Add an instalment purchase</h2>
         <div className="grid gap-2">
           <Label htmlFor="plan-description">Description</Label>
           <Input id="plan-description" value={description} onChange={(event) => setDescription(event.target.value)} required />
         </div>
-        <div className="grid gap-2 sm:grid-cols-3">
+        <div className="grid min-w-0 gap-2 sm:grid-cols-3">
           <div className="grid gap-2">
             <Label htmlFor="plan-principal">Principal AED</Label>
             <Input id="plan-principal" inputMode="decimal" value={principal} onChange={(event) => setPrincipal(event.target.value)} required />
@@ -134,19 +134,19 @@ export function ObligationsPage() {
               {plan.posted_on} · {plan.category} · {plan.parts} parts
             </p>
             <dl className="mt-3 grid gap-1 text-sm">
-              <div className="flex justify-between gap-4">
+              <div className="flex flex-wrap justify-between gap-x-4">
                 <dt className="text-ink-secondary">Purchase, counted once</dt>
                 <dd>{plan.principal} AED</dd>
               </div>
-              <div className="flex justify-between gap-4">
+              <div className="flex flex-wrap justify-between gap-x-4">
                 <dt className="text-ink-secondary">Monthly</dt>
                 <dd>{plan.monthly_amount} AED</dd>
               </div>
-              <div className="flex justify-between gap-4">
+              <div className="flex flex-wrap justify-between gap-x-4">
                 <dt className="text-ink-secondary">Repaid</dt>
                 <dd>{plan.repaid} AED</dd>
               </div>
-              <div className="flex justify-between gap-4">
+              <div className="flex flex-wrap justify-between gap-x-4">
                 <dt className="text-ink-secondary">Remaining</dt>
                 <dd>{plan.remaining} AED</dd>
               </div>

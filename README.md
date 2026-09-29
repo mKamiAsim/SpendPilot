@@ -1,6 +1,6 @@
 # SpendPilot
 
-Self-hosted personal finance app through the remaining product: identity, the ledger, a monthly briefing, instalments, analytics, and encrypted backup. It is not production-ready. Do not deploy it.
+Self-hosted personal finance app through hardening: identity, the ledger, a monthly briefing, instalments, analytics, encrypted backup, and the acceptance-criteria map. It is not production-ready. Do not deploy it. The handover is `docs/handover.md`. The screenshot pass is `docs/ui-qa.md`.
 
 The product name in the interface is SpendPilot. Statement layouts are two synthetic fixtures, a generic AED card and a generic AED bank file. Neither names a bank. OCR is not installed. No model is bundled.
 
@@ -45,7 +45,7 @@ cd frontend && npx playwright test
 - No OpenAI-compatible model endpoint is configured. `MODEL_SMOKE_URL` is empty, so the live smoke test stays pending. The CI provider is deterministic and is not a hosted fallback. Live tool-calling and a live deep review are not claimed.
 - OCR engines and language data are not in the image. A scanned PDF fails that file. See `docs/adr/0004-pdf-ocr-licences.md`.
 - Compose was checked with one unencrypted synthetic card PDF: the document worker committed it, a second upload stayed a duplicate, and the card list did not show the shared closing. The wrong-password batch was not repeated against Compose. A files volume created before this image may be owned by root; new volumes are created for uid 10001.
-- Phase 7 is not started. Screenshot review at 200% zoom, a prompt-injection PDF, and a full map of all twenty acceptance criteria are still open.
+- Phase 7 mapped the twenty acceptance criteria in `docs/handover.md`. A green test run is not a production claim. Criteria 11 and the live half of 13 stay unverified while `MODEL_SMOKE_URL` is empty. The parser matrix, prompt-injection PDF, cross-user ids, and secret redaction are covered by `backend/tests/test_hardening.py`. CI sets `SPENDPILOT_PROVIDER=fake` and does not fall back to a hosted model.
 
 ## Layout
 
