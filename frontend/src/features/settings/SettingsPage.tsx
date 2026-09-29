@@ -26,6 +26,8 @@ export function SettingsPage() {
   const [keySaved, setKeySaved] = useState(false);
   const [providerMessage, setProviderMessage] = useState("");
   const [providerError, setProviderError] = useState("");
+  const [memories, setMemories] = useState<{ id: string; body: string }[]>([]);
+  const [memoryDraft, setMemoryDraft] = useState("");
 
   useEffect(() => {
     api("/api/v1/provider")
@@ -44,6 +46,10 @@ export function SettingsPage() {
         }));
         setKeySaved(body.provider.api_key_saved);
       })
+      .catch(() => undefined);
+    api("/api/v1/memories")
+      .then((response) => readJson<{ memories: { id: string; body: string }[] }>(response))
+      .then((body) => setMemories(body.memories))
       .catch(() => undefined);
   }, []);
 
@@ -171,6 +177,47 @@ export function SettingsPage() {
             Test connection
           </Button>
         </div>
+      </form>
+      <form
+        className="mt-6 grid gap-3 rounded-xl border border-line bg-surface p-6"
+        onSubmit={async (event) => {
+          event.preventDefault();
+          setProviderError("");
+          const saved = await readJson<{ id: string; body: string }>(
+            await api("/api/v1/memories", { method: "POST", body: JSON.stringify({ body: memoryDraft }) }),
+          );
+          setMemories((current) => [...current, saved]);
+          setMemoryDraft("");
+        }}
+      >
+        <h2 className="text-base font-medium">Confirmed preferences</h2>
+        <p className="text-sm text-ink-secondary">
+          A preference is kept only when you save it. A review can read it. It is not treated as income or as a posted
+          amount.
+        </p>
+        <Label htmlFor="memory-body">Preference</Label>
+        <Input id="memory-body" value={memoryDraft} onChange={(event) => setMemoryDraft(event.target.value)} />
+        <Button type="submit" disabled={!memoryDraft.trim()}>
+          Save preference
+        </Button>
+        <ul className="grid gap-2">
+          {memories.map((memory) => (
+            <li key={memory.id} className="flex flex-wrap items-center justify-between gap-2 text-sm">
+              <span>{memory.body}</span>
+              <Button
+                type="button"
+                size="sm"
+                variant="secondary"
+                onClick={async () => {
+                  await readJson(await api(`/api/v1/memories/${memory.id}`, { method: "DELETE" }));
+                  setMemories((current) => current.filter((item) => item.id !== memory.id));
+                }}
+              >
+                Delete
+              </Button>
+            </li>
+          ))}
+        </ul>
       </form>
       <Button
         className="mt-6"

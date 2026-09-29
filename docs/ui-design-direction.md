@@ -1,6 +1,6 @@
 # SpendPilot visual direction
 
-The September screens below stay a development preview. They load only when the Vite dev server is running. Cards, statements, and the production transaction list use the ledger API. The production advisor runs one investigation and opens the cited rows. The shared closing balance is shown once on the statement.
+The September screens below stay a development preview. They load only when the Vite dev server is running. The production overview shows a published briefing, and scenarios calculate a reduction before a target can be accepted. Cards, statements, and the production transaction list use the ledger API. The production advisor runs one investigation and opens the cited rows. The shared closing balance is shown once on the statement.
 
 ## References
 

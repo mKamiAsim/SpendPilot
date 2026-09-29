@@ -33,7 +33,9 @@ async def summary(request: Request) -> dict:
             )
         )
     ).mappings().one()
-    cash = await db.scalar(text("SELECT COALESCE(SUM(amount), 0) FROM cash_entries"))
+    cash = await db.scalar(
+        text("SELECT COALESCE(SUM(amount) FILTER (WHERE category <> 'Income'), 0) FROM cash_entries")
+    )
     statement_count = int(await db.scalar(text("SELECT count(*) FROM statements")) or 0)
     flagged = bool(
         await db.scalar(

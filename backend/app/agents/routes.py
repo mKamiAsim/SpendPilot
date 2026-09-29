@@ -283,7 +283,7 @@ async def _investigation_payload(db, investigation_id) -> dict:
                        investigations.provider_mode, investigations.failure_code,
                        investigations.failure_message, investigations.activity, investigations.snapshot_id,
                        findings.id AS finding_id, findings.title, findings.explanation, findings.severity,
-                       findings.evidence_ids, findings.calculation_id, findings.amount,
+                       findings.evidence_ids, findings.calculation_id, findings.amount, findings.stale,
                        snapshots.body AS snapshot_body
                 FROM investigations
                 LEFT JOIN findings ON findings.investigation_id = investigations.id
@@ -309,6 +309,7 @@ async def _investigation_payload(db, investigation_id) -> dict:
             "severity": row["severity"],
             "amount": row["amount"],
             "calculation_id": row["calculation_id"],
+            "stale": bool(row["stale"]),
             "evidence": evidence,
         }
     return {

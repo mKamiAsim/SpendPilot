@@ -11,6 +11,8 @@ from fastapi.responses import JSONResponse
 from sqlalchemy import text
 
 from app.accounts.routes import router as cards_router
+from app.agents.review_routes import defer_review_quietly
+from app.agents.review_routes import router as review_router
 from app.agents.routes import defer_investigation_quietly
 from app.agents.routes import router as agent_router
 from app.administration.routes import router as admin_router
@@ -24,6 +26,7 @@ from app.identity.routes import router as auth_router
 from app.ingestion.routes import defer_quietly
 from app.ingestion.routes import router as imports_router
 from app.ledger.routes import router as ledger_router
+from app.scenarios.routes import router as scenario_router
 
 correlation_id: ContextVar[str] = ContextVar("correlation_id", default="")
 logger = logging.getLogger("spendpilot")
@@ -95,6 +98,9 @@ def create_app() -> FastAPI:
             pending_investigations = getattr(request.state, "pending_investigations", ())
             for investigation_id, owner_id in pending_investigations:
                 defer_investigation_quietly(investigation_id, owner_id)
+            pending_reviews = getattr(request.state, "pending_reviews", ())
+            for review_id, owner_id in pending_reviews:
+                defer_review_quietly(review_id, owner_id)
         response.headers["X-Correlation-ID"] = current
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["Referrer-Policy"] = "no-referrer"
@@ -132,6 +138,8 @@ def create_app() -> FastAPI:
     app.include_router(analytics_router)
     app.include_router(ledger_router)
     app.include_router(agent_router)
+    app.include_router(review_router)
+    app.include_router(scenario_router)
     return app
 
 

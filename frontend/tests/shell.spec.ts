@@ -14,8 +14,8 @@ test("shell works at desktop and phone width in light and dark", async ({ page }
   await page.getByRole("button", { name: "Create account" }).click();
   await expect(page).toHaveURL(/\/overview$/);
   await expect(page.getByTestId("sidebar")).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Overview" })).toBeVisible();
-  await expect(page.getByText("There is no statement data here")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Monthly briefing" })).toBeVisible();
+  await expect(page.getByText("No briefing is published yet.")).toBeVisible();
 
   const desktopOverflow = await page.evaluate(
     () => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1,

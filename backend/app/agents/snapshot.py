@@ -25,7 +25,7 @@ FORBIDDEN_KEYS = frozenset(
 )
 
 
-def freeze_snapshot(conn: psycopg.Connection, *, consent: str, consent_version: int) -> tuple[str, dict]:
+def read_snapshot_body(conn: psycopg.Connection) -> dict:
     transactions = [
         _transaction(row)
         for row in conn.execute(
@@ -78,6 +78,11 @@ def freeze_snapshot(conn: psycopg.Connection, *, consent: str, consent_version: 
         "totals": totals_for(transactions, cash_entries, statements),
     }
     _reject_forbidden(body)
+    return body
+
+
+def freeze_snapshot(conn: psycopg.Connection, *, consent: str, consent_version: int) -> tuple[str, dict]:
+    body = read_snapshot_body(conn)
     owner = conn.execute(
         "SELECT NULLIF(current_setting('app.owner_id', true), '')::uuid AS owner_id"
     ).fetchone()
@@ -98,12 +103,23 @@ def totals_for(transactions: list[dict], cash_entries: list[dict], statements: l
 
     purchases = summed("purchase")
     refunds = summed("refund")
-    cash = money(sum((money(row["amount"]) for row in cash_entries), Decimal("0")))
+    spending_cash = [
+        row for row in cash_entries if row["category"] != "Income"
+    ]
+    income_rows = [row for row in cash_entries if row["category"] == "Income"]
+    income_rows.extend(
+        row
+        for row in transactions
+        if row["category"] == "Income" and row["entry_type"] not in {"purchase", "fee", "interest", "cash_withdrawal"}
+    )
+    cash = money(sum((money(row["amount"]) for row in spending_cash), Decimal("0")))
+    income = money(sum((money(row["amount"]) for row in income_rows), Decimal("0")))
     flagged = any(row["reconciliation"] == "accepted_discrepancy" for row in statements)
     return {
         "gross_purchases": money_str(purchases),
         "refunds": money_str(refunds),
         "cash_purchases": money_str(cash),
+        "income_total": money_str(income),
         "net_spending": money_str(purchases - refunds + cash),
         "fees": money_str(summed("fee")),
         "payments": money_str(summed("payment")),

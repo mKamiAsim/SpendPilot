@@ -46,6 +46,21 @@ def investigate(investigation_id: str, owner_id: str) -> None:
     process_investigation(investigation_id, owner_id)
 
 
+@tasks.task(name="agents.review", queue="agents", retry=3)
+def review_task(review_id: str, owner_id: str) -> None:
+    """Publish one briefing. A retry returns once the review is no longer running."""
+
+    from app.agents.review import process_review
+
+    process_review(review_id, owner_id)
+
+
+def defer_review(review_id: str, owner_id: str) -> None:
+    app = get_queue_app()
+    with app.open():
+        review_task.defer(review_id=review_id, owner_id=owner_id)
+
+
 def defer_investigation(investigation_id: str, owner_id: str) -> None:
     app = get_queue_app()
     with app.open():

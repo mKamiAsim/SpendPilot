@@ -17,6 +17,7 @@ import {
   UnlockPage,
   VerifyPage,
 } from "../features/auth/pages";
+import { ScenariosPage } from "../features/scenarios/ScenariosPage";
 import { SettingsPage } from "../features/settings/SettingsPage";
 import { useSession } from "./session";
 
@@ -55,7 +56,7 @@ export function AppRoutes() {
         <Route path="/money/obligations" element={<PlaceholderPage title="Obligations" detail={later} />} />
         <Route path="/intelligence/advisor" element={<AdvisorPage />} />
         {import.meta.env.DEV ? <Route path="/dev/components" element={<PreviewPage />} /> : null}
-        <Route path="/intelligence/scenarios" element={<PlaceholderPage title="Scenarios" detail={later} />} />
+        <Route path="/intelligence/scenarios" element={<ScenariosPage />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/admin" element={<AdminPage />} />
         <Route path="*" element={<Navigate to="/overview" replace />} />

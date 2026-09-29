@@ -20,6 +20,7 @@ type Finding = {
   severity: string;
   amount: string;
   calculation_id: string;
+  stale?: boolean;
   evidence: Evidence[];
 };
 
@@ -120,6 +121,7 @@ export function AdvisorLive() {
         {finding ? (
           <article className="mt-6 rounded-xl border border-line bg-surface p-4">
             <p className="text-xs uppercase tracking-[0.14em] text-ink-secondary">{finding.severity}</p>
+            {finding.stale ? <p className="mt-2 text-sm text-warn">Stale after a category correction.</p> : null}
             <h2 className="mt-2 text-lg font-medium">{finding.title}</h2>
             <p className="mt-2 text-sm leading-6">{finding.explanation}</p>
             <p className="mt-3 text-sm">Net spending {finding.amount} AED</p>
