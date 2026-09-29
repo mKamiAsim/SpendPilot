@@ -20,6 +20,7 @@ class ExtractedRow:
     category: str
     description: str
     amount: Decimal
+    flow: str | None = None
 
 
 @dataclass(frozen=True)
@@ -38,7 +39,11 @@ class ExtractedStatement:
     def computed_closing(self) -> Decimal:
         total = self.opening_liability
         for row in self.rows:
-            if row.entry_type in LIABILITY_INCREASE:
+            if row.flow == "in":
+                total += row.amount
+            elif row.flow == "out":
+                total -= row.amount
+            elif row.entry_type in LIABILITY_INCREASE:
                 total += row.amount
             elif row.entry_type in LIABILITY_DECREASE:
                 total -= row.amount
@@ -64,6 +69,11 @@ def extract(text: str) -> ExtractedStatement:
 
         if bank_detect(text):
             return bank_extract(text)
+        from app.ingestion.layouts import parse_named
+
+        named = parse_named(text)
+        if named is not None:
+            return named
         raise UnsupportedLayout("This file is not a supported synthetic layout.")
     fields: dict[str, str] = {}
     rows: list[ExtractedRow] = []

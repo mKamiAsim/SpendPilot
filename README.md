@@ -2,7 +2,7 @@
 
 Self-hosted personal finance app through hardening: identity, the ledger, a monthly briefing, instalments, analytics, encrypted backup, and the acceptance-criteria map. It is not production-ready. Do not deploy it. The handover is `docs/handover.md`. The screenshot pass is `docs/ui-qa.md`.
 
-The product name in the interface is SpendPilot. Statement layouts are two synthetic fixtures, a generic AED card and a generic AED bank file. Neither names a bank. A text PDF is not sent through OCR. A scanned page uses the English and Arabic Tesseract data in the image. No model is bundled.
+The product name in the interface is SpendPilot. Statement layouts are synthetic fixtures: a generic AED card, a generic AED bank file, an ADCB LuLu card, one Emirates Islamic card layout, an Emirates NBD Mastercard Platinum, and an ADCB consolidated statement. Real files were not used to confirm the named layouts. A text PDF is not sent through OCR. A scanned page uses the English and Arabic Tesseract data in the image. No model is bundled.
 
 `npm run dev` in `frontend/` still shows a development-only September fixture on Overview, Transactions, and Advisor, plus `/dev/components`. Those figures are not in the production build. Cards and statements call the API in every build.
 
@@ -49,4 +49,4 @@ cd frontend && npx playwright test
 
 ## Layout
 
-`backend/app` holds the API, identity, cards, import, and analytics. `frontend/src` holds the shell. `infra/docker` holds the images. `docs/adr` records the phase 0 decisions. `docs/parser-support/matrix.md` lists the two synthetic layouts. `docs/adr/0009-backup-passphrase.md` records the backup key.
+`backend/app` holds the API, identity, cards, import, and analytics. `frontend/src` holds the shell. `infra/docker` holds the images. `docs/adr` records the phase 0 decisions. `docs/parser-support/matrix.md` lists the synthetic layouts. `docs/adr/0009-backup-passphrase.md` records the backup key.

@@ -114,8 +114,9 @@ export function StatementsPage() {
       <p className="text-xs font-medium uppercase tracking-[0.14em] text-ink-secondary">SpendPilot</p>
       <h1 className="mt-2 text-[1.75rem] font-semibold leading-tight">Statements</h1>
       <p className="mt-3 max-w-2xl text-sm text-ink-secondary">
-        Upload PDF statements. This build reads two synthetic layouts, a generic AED card and a generic AED bank file, and
-        does not name a bank. A wrong password fails that file only. A scanned page is read with English and Arabic OCR. A text PDF is not sent through OCR. A page that still has no text fails that file only.
+        Upload PDF statements. This build reads synthetic fixtures, including named card and bank layouts. Real files were
+        not used to confirm these layouts. A wrong password fails that file only. A scanned page is read with English and
+        Arabic OCR. A text PDF is not sent through OCR. A page that still has no text fails that file only.
       </p>
       {error ? <p className="mt-4 text-sm text-bad">{error}</p> : null}
       <form onSubmit={onSubmit} className="mt-6 grid gap-4 rounded-xl border border-line bg-surface p-6">

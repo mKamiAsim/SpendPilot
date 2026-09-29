@@ -55,19 +55,24 @@ def build_fixture_pdf(
 
 
 def write_lines_pdf(lines: list[str], *, password: str | None = None) -> bytes:
+    return write_pages_pdf([lines], password=password)
+
+
+def write_pages_pdf(pages: list[list[str]], *, password: str | None = None) -> bytes:
     pdf = Pdf.new()
     font = pdf.make_indirect(Dictionary(Type=Name.Font, Subtype=Name.Type1, BaseFont=Name.Helvetica))
-    commands = ["BT", "/F1 10 Tf", "48 740 Td", "12 TL"]
-    for line in lines:
-        if not line.isascii():
-            raise ValueError("Fixture lines must be plain ASCII.")
-        escaped = line.replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)")
-        commands.append(f"({escaped}) Tj")
-        commands.append("T*")
-    commands.append("ET")
-    page = pdf.add_blank_page(page_size=(612, 792))
-    page.Contents = pdf.make_stream(" ".join(commands).encode("ascii"))
-    page.Resources = Dictionary(Font=Dictionary(F1=font))
+    for lines in pages:
+        commands = ["BT", "/F1 10 Tf", "48 740 Td", "12 TL"]
+        for line in lines:
+            if not line.isascii():
+                raise ValueError("Fixture lines must be plain ASCII.")
+            escaped = line.replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)")
+            commands.append(f"({escaped}) Tj")
+            commands.append("T*")
+        commands.append("ET")
+        page = pdf.add_blank_page(page_size=(612, 792))
+        page.Contents = pdf.make_stream(" ".join(commands).encode("ascii"))
+        page.Resources = Dictionary(Font=Dictionary(F1=font))
     raw = BytesIO()
     pdf.save(raw)
     if not password:

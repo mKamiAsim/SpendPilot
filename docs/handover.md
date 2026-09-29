@@ -1,8 +1,8 @@
 # Handover
 
-SpendPilot is not production-ready. A green build does not make it a deployment. The interface name is SpendPilot. No bank is named. No model is bundled. No secret is in the repository.
+SpendPilot is not production-ready. A green build does not make it a deployment. The interface name is SpendPilot. Named layouts are parsed from synthetic fixtures only. No real statement was used. No model is bundled. No secret is in the repository.
 
-`cd backend && uv run pytest -q` on 29 September 2026: 54 passed, 1 skipped. The skip is `tests/test_agent.py` because `MODEL_SMOKE_URL` is empty. Live tool-calling stays unverified. This pass re-ran `frontend/tests/shell.spec.ts` and `frontend/tests/product.spec.ts` against the gateway. The statements page shows English and Arabic OCR for a scanned page, and that a text PDF is not sent through OCR. The phase 7 screenshots were not retaken. Compose stays on `SPENDPILOT_PROVIDER=configured`.
+`cd backend && uv run pytest -q` on 29 September 2026: 63 passed, 1 skipped. The skip is `tests/test_agent.py` because `MODEL_SMOKE_URL` is empty. Live tool-calling stays unverified. Named layouts are covered by `backend/tests/test_layouts.py` with synthetic fixtures. Real statement files were not used. The statements page says that. `frontend/tests/product.spec.ts` and `frontend/tests/shell.spec.ts` passed against the gateway. Compose stays on `SPENDPILOT_PROVIDER=configured`.
 
 ## Implemented and tested
 
@@ -25,7 +25,7 @@ These criteria have deterministic tests. They do not need a live model or a real
 17. Backup restore covers a valid archive, a wrong passphrase, a corrupt file, and a second restore that does not duplicate. Another user cannot download the backup. `test_corrupt_backup_does_not_change_existing_data`.
 18. Desktop, 200% zoom, and a phone keyboard pass are in `docs/ui-qa.md`. Analytics uses a table of amounts, not colour alone. Contrast was not measured with a tool.
 19. Compose starts from `.env.example` and the documented commands. The gateway is same-site on `127.0.0.1:8080`. Fonts are self-hosted. This was not a fresh-machine install.
-20. `docs/parser-support/matrix.md` lists two synthetic layouts and rejects every other file. `test_parser_matrix_lists_synthetic_layouts_only`. No real bank is advertised as supported.
+20. `docs/parser-support/matrix.md` lists the synthetic layouts, including four named ones, and rejects every other file. `test_parser_matrix_lists_synthetic_layouts_only` and `backend/tests/test_layouts.py`. Real files were not used, so those named layouts are not confirmed.
 
 Owner-scoped LangGraph checkpoints are tested. `langgraph_checkpoints` and `langgraph_checkpoint_writes` carry `owner_id` and forced row-level security. The migrator cannot create a schema, so the tables are in `public`. `test_one_user_cannot_read_another_users_langgraph_checkpoint` shows another session gets no row. `review_checkpoints` is still the step log.
 
@@ -47,15 +47,16 @@ The investigation prompt tells the model that transaction descriptions are untru
 - Visual contrast, and the evidence drawer, were not part of the phase 7 screenshot pass.
 - The GitHub Actions run itself. The workflow file is in the tree. This environment did not watch it go green.
 - OCR of a real scanned statement. The scanned-page test uses a synthetic image that says HELLO. That is not a bank PDF. A statement was not imported through the new document-worker image.
+- Real-file confirmation of the ADCB LuLu card, the Emirates Islamic card, the Emirates NBD Mastercard Platinum, and the ADCB consolidated statement. The samples are not in the repo. The tests use synthetic fixtures only.
 
 ## Deferred
 
-Arabic and right-to-left UI, rewards and MCC optimisation, foreign-exchange accounting, SMS ingestion, mobile packaging, an offline installer, bank login, payments, bundled model weights, a production deployment, and named bank layouts. See ADR 0004 and ADR 0008.
+Arabic and right-to-left UI, rewards and MCC optimisation, foreign-exchange accounting, SMS ingestion, mobile packaging, an offline installer, bank login, payments, bundled model weights, and a production deployment. See ADR 0004 and ADR 0008.
 
 ## Blocked
 
 - `MODEL_SMOKE_URL` is empty, so criteria 11 and the live half of 13 stay unverified.
-- No authorised bank PDF is available, so criterion 20 cannot move past synthetic layouts.
+- No authorised bank PDF is available, so the named layouts stay unconfirmed against a real statement.
 - `SMTP_HOST` is empty, so live mail stays unverified.
 
 Do not read a green pytest line as production-ready.

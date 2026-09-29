@@ -62,10 +62,19 @@ def test_ci_uses_the_fake_provider(database_env):
 
 def test_parser_matrix_lists_synthetic_layouts_only():
     matrix = (ROOT / "docs" / "parser-support" / "matrix.md").read_text()
-    assert "generic-aed-card-v1" in matrix
-    assert "generic-aed-bank-v1" in matrix
-    assert "does not name" in matrix
-    for name in ("Emirates NBD", "First Abu Dhabi", "ADCB", "Mashreq", "RAKBANK", "ENBD"):
+    for layout in (
+        "generic-aed-card-v1",
+        "generic-aed-bank-v1",
+        "adcb-lulu-card-v1",
+        "emirates-islamic-card-v1",
+        "emirates-nbd-mastercard-platinum-v1",
+        "adcb-privilege-bank-v1",
+    ):
+        assert layout in matrix
+    assert "Real statement files were not used" in matrix
+    assert "not confirmed" in matrix
+    assert "First Abu Dhabi" not in matrix
+    for name in ("Mashreq", "RAKBANK"):
         assert name not in matrix
 
 

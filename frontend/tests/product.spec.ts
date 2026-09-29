@@ -44,7 +44,7 @@ test("obligations, analytics, and backup stay usable", async ({ page }) => {
 
   await page.getByRole("link", { name: "Statements" }).click();
   await expect(page.getByRole("heading", { name: "Statements", exact: true })).toBeVisible();
-  await expect(page.getByText("does not name a bank")).toBeVisible();
+  await expect(page.getByText("Real files were not used to confirm these layouts.")).toBeVisible();
   await expect(page.getByText("English and Arabic OCR")).toBeVisible();
   await expect(page.getByText("A text PDF is not sent through OCR.")).toBeVisible();
 
